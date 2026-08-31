@@ -4,14 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <title>Carbo Bike — Piano di integrazione carboidrati</title>
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#171B14">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Carbo Bike">
-<link rel="icon" href="./icon-192.png">
-<link rel="apple-touch-icon" href="./icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -1298,8 +1290,8 @@
     events.sort((a,b)=>a.km-b.km);
 
     // 4. bilanciamento vs target g/h — prima si taglia l'eventuale eccesso, poi si
-    // compensa il fabbisogno mancante. Le soglie sono strette apposta: l'obiettivo è
-    // restare vicini al target impostato, non solo evitare gli eccessi grossolani.
+    // compensa il fabbisogno mancante. Tolleranza ±5% sul target: sopra quella soglia
+    // si taglia o si alleggerisce, sotto si integra — mai oltre il margine richiesto.
     const target = inputs.targetGH*totalH;
     const delivered = ()=> events.reduce((s,e)=>s+e.grams,0);
 
@@ -1316,7 +1308,7 @@
     // un gel da 25g il piano rientra senza perdere un rifornimento. Togliere una sosta
     // è sempre peggio che alleggerirla.
     let guardDown = 0;
-    while(delivered() > target*1.10 && guardDown < 20){
+    while(delivered() > target*1.05 && guardDown < 20){
       guardDown++;
       let best=null;
       events.filter(e=>e.type==='gel'||e.type==='bar').forEach(e=>{
@@ -1333,12 +1325,12 @@
       if(best.e.labelAuto) best.e.label = autoLabel(best.e);
     }
 
-    if(delivered() > target*1.10){
+    if(delivered() > target*1.05){
       // se anche alleggerendo si resta sopra, si taglia: prima le barrette eccedenti
       // la quota protetta, poi i gel "di riempimento" (piano, poi metà salita).
       // Base salita e borraccia di partenza restano intoccate.
       let guard = 0;
-      while(delivered() > target*1.10 && guard < 25){
+      while(delivered() > target*1.05 && guard < 25){
         guard++;
         const keep = protectedBarIds();
         let candidates = events.filter(e=>e.type==='bar' && keep.indexOf(e.id)<0);
@@ -1346,6 +1338,7 @@
         if(candidates.length===0) candidates = events.filter(e=>e.role==='mid');
         if(candidates.length===0) candidates = events.filter(e=>e.role==='top' && keep.indexOf(e.id)<0);
         if(candidates.length===0) candidates = events.filter(e=>e.type==='bar' && keep.indexOf(e.id)>=0).slice(1);
+        if(candidates.length===0) candidates = events.filter(e=>e.role==='base');
         if(candidates.length===0) break;
         let best=candidates[0], bestErr=Infinity;
         candidates.forEach(c=>{
@@ -1478,6 +1471,43 @@
         conv.productId = anyBar.id;
         conv.grams = anyBar.grams;
         if(conv.labelAuto) conv.label = autoLabel(conv);
+      }
+    }
+
+    // 7. ultima leva, dopo tutto il resto: se lo scostamento dal target resta oltre il
+    // ±5% — percorso troppo corto o veloce per aprire altri spazi utili a gel e
+    // barrette, o il grosso arriva già dalle borracce che hai configurato tu — si tocca
+    // la dose sciolta nelle borracce stesse. Mai la loro presenza (restano sempre in
+    // programma), solo la quantità: si parte da quella più carica per tagliare, da
+    // quella più leggera per aggiungere, così il carico resta bilanciato tra le due.
+    const MAX_BOTTLE_G = 120;
+    if(delivered() > target*1.05){
+      let guardBottleDown=0;
+      while(delivered() > target*1.05 && guardBottleDown<40){
+        guardBottleDown++;
+        const cand = events.filter(e=>e.type==='bottle' && e.grams>0)
+          .sort((a,b)=>b.grams-a.grams)[0];
+        if(!cand) break;
+        const excess = delivered() - target*1.05;
+        const step = Math.max(1, Math.min(cand.grams, Math.round(excess)));
+        cand.grams = Math.max(0, cand.grams - step);
+        if(cand.labelAuto){
+          if(cand.grams===0 && cand.role==='ristoro') cand.role='refill';
+          cand.label = autoLabel(cand);
+        }
+      }
+    }
+    if(delivered() < target*0.95){
+      let guardBottleUp=0;
+      while(delivered() < target*0.95 && guardBottleUp<40){
+        guardBottleUp++;
+        const cand = events.filter(e=>e.type==='bottle' && e.grams<MAX_BOTTLE_G)
+          .sort((a,b)=>a.grams-b.grams)[0];
+        if(!cand) break;
+        const deficit = target*0.95 - delivered();
+        const step = Math.max(1, Math.min(MAX_BOTTLE_G-cand.grams, Math.round(deficit)));
+        cand.grams += step;
+        if(cand.labelAuto) cand.label = autoLabel(cand);
       }
     }
 
@@ -1712,7 +1742,7 @@
 
     // 1. scostamento dal target: si corregge cambiando la grammatura di un punto,
     // non togliendolo.
-    if(gh > i.targetGH*1.06){
+    if(gh > i.targetGH*1.05){
       const s = bestSwap((e,p)=>p.grams<e.grams);
       if(s){
         out.push('<b>km '+s.e.km.toFixed(1)+'</b> — il piano viaggia a '+gh.toFixed(0)+' g/h contro un target di '
@@ -1727,7 +1757,7 @@
           +Math.round(fixed)+' g</b> ('+quota+'% del totale): su un percorso corto come questo è lì che conviene '
           +'scendere con la polvere, non togliere una sosta.');
       }
-    } else if(gh < i.targetGH*0.94){
+    } else if(gh < i.targetGH*0.95){
       const s = bestSwap((e,p)=>p.grams>e.grams);
       if(s){
         out.push('<b>km '+s.e.km.toFixed(1)+'</b> — il piano si ferma a '+gh.toFixed(0)+' g/h contro un target di '
@@ -1925,9 +1955,19 @@
       ? 'VAM '+i.vam+' m/h'
       : effectiveWkg().toFixed(1)+' W/kg (~'+Math.round(effectiveVam())+' m/h)';
     const prodTxt = state.products.map(p=>p.name+' '+p.grams+'g').join(', ');
+    // i grammi in borraccia mostrati qui sono quelli davvero usati nel piano: se per
+    // rientrare nel ±5% l'algoritmo li ha corretti rispetto a quanto digitato, lo si
+    // segnala esplicitamente, così il numero non stona con quello nel road book sotto.
+    const bottleEvs = state.events.filter(e=>e.type==='bottle');
+    const startEv = bottleEvs.find(e=>e.role==='start');
+    const refill2Ev = bottleEvs.find(e=>e.role==='refill2');
+    const actualB1 = startEv ? startEv.grams : i.bottle1Carbs;
+    const actualB2 = refill2Ev ? refill2Ev.grams : i.bottle2Carbs;
+    const bottleTxt = actualB1+'g'+(i.bottleCount===2?' + '+actualB2+'g':'');
+    const adjusted = (actualB1!==i.bottle1Carbs) || (i.bottleCount===2 && actualB2!==i.bottle2Carbs);
     el.textContent = '✓ Piano generato · '+lvlTxt+': '+effectiveSpeed()+' km/h fuori salita · '+climbTxt
       +' · in tasca: '+prodTxt
-      +' · '+i.bottleCount+' borracc'+(i.bottleCount===1?'ia':'e')+' ('+i.bottle1Carbs+'g'+(i.bottleCount===2?' + '+i.bottle2Carbs+'g':'')+')'
+      +' · '+i.bottleCount+' borracc'+(i.bottleCount===1?'ia':'e')+' ('+bottleTxt+(adjusted?', corretti per il target':'')+')'
       +(i.ristoro&&i.ristoroKm>0?' · ristoro km '+i.ristoroKm+' ('+i.ristoroCarbs+'g)':'')
       +' · target '+i.targetGH+' g/h — '+state.events.length+' punti, '+Math.round(state.events.reduce((s,e)=>s+e.grams,0))+' g totali';
     el.classList.remove('flash');
@@ -2177,14 +2217,6 @@
     });
 
   });
-
-  if('serviceWorker' in navigator){
-    window.addEventListener('load', ()=>{
-      navigator.serviceWorker.register('./sw.js').catch(()=>{
-        // in locale senza https il service worker non si registra: non blocca l'app
-      });
-    });
-  }
 })();
 </script>
 </body>

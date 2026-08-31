@@ -1,7 +1,7 @@
 // Service worker minimo: mette in cache la app (un solo file HTML, niente
 // backend) così dopo la prima apertura funziona anche senza rete — utile
 // in salita, dove il segnale è spesso il primo a mancare.
-const CACHE_NAME = 'carbo-bike-v2';
+const CACHE_NAME = 'carbo-bike-v3';
 const ASSETS = [
   './',
   './index.html',
