@@ -1,0 +1,2191 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>Carbo Bike — Piano di integrazione carboidrati</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#171B14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Carbo Bike">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFF1EA;
+    --paper-raised:#FFFFFF;
+    --ink:#171B14;
+    --ink-soft:#4B5147;
+    --line:#C9CEBD;
+    --line-strong:#9CA38C;
+    --yellow:#F2B705;
+    --orange:#E8720C;
+    --red:#C62E24;
+    --steep:#4A1414;
+    --flat-band:#DCE4CE;
+    --descent-band:#BFD8E6;
+    --teal:#16806A;
+    --violet:#6B3FA0;
+    --blue:#1F6FA8;
+    --shadow:0 1px 2px rgba(23,27,20,0.06), 0 4px 14px rgba(23,27,20,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.45;
+  }
+  h1,h2,h3,.eyebrow,.oswald{font-family:'Oswald','Arial Narrow',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,monospace;}
+  a{color:var(--teal);}
+
+  /* header */
+  .app-header{
+    background:var(--ink);
+    color:var(--paper);
+    padding:18px 20px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .app-header .logo{flex-shrink:0;}
+  .app-header h1{
+    margin:0;
+    font-size:24px;
+    font-weight:700;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+  }
+  .app-header p{
+    margin:2px 0 0;
+    font-size:12.5px;
+    color:rgba(239,241,234,0.72);
+  }
+
+  main{max-width:960px;margin:0 auto;padding:22px 16px 70px;}
+
+  .card{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:3px;
+    box-shadow:var(--shadow);
+    padding:22px;
+    margin-bottom:20px;
+  }
+  .card.hidden{display:none;}
+  .card h2{
+    font-size:14px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.09em;
+    color:var(--ink-soft);
+    margin:0 0 16px;
+  }
+  .card h2 .num{color:var(--ink);}
+
+  /* upload */
+  .dropzone{
+    border:2px dashed var(--line-strong);
+    border-radius:3px;
+    padding:34px 20px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s ease, background-color .15s ease;
+  }
+  .dropzone:hover, .dropzone.drag{
+    border-color:var(--teal);
+    background:rgba(22,128,106,0.05);
+  }
+  .dropzone svg{margin-bottom:10px;}
+  .dz-title{margin:0;font-weight:600;font-size:15px;}
+  .dz-sub{margin:4px 0 0;font-size:13px;color:var(--ink-soft);}
+  .dz-error{
+    margin:14px 0 0;color:var(--red);font-size:13.5px;font-weight:600;
+  }
+  .dz-error.hidden{display:none;}
+  .dz-success{
+    margin:14px 0 0;color:var(--teal);font-size:13.5px;font-weight:600;
+  }
+  .dz-success.hidden{display:none;}
+
+  /* inputs */
+  .input-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:14px;
+  }
+  .field label{
+    display:block;
+    font-family:'Oswald',sans-serif;
+    text-transform:uppercase;
+    font-size:11.5px;
+    letter-spacing:0.06em;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .field input, .field select{
+    width:100%;
+    padding:10px 11px;
+    border:1px solid var(--line-strong);
+    border-radius:2px;
+    background:var(--paper);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:15px;
+    color:var(--ink);
+  }
+  .field input:focus-visible, .field select:focus-visible{
+    outline:2px solid var(--teal);
+    outline-offset:1px;
+  }
+  .field-hint{
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin:5px 2px 0;
+  }
+  .input-actions{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;}
+
+  /* livello ciclista */
+  .level-readout{
+    margin-top:14px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-left:3px solid var(--teal);
+    border-radius:2px;
+    padding:11px 13px;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .level-readout .lr-blurb{color:var(--ink);font-weight:500;margin:0 0 5px;}
+  .level-readout .lr-nums{font-family:'IBM Plex Mono',monospace;font-size:12.5px;margin:0;}
+  .level-readout.hidden{display:none;}
+  #custom-fields.hidden{display:none;}
+  #custom-fields{margin-top:14px;}
+
+  /* prodotti */
+  .products{
+    margin-top:20px;padding-top:18px;border-top:1px solid var(--line);
+  }
+  .products-title{
+    font-family:'Oswald',sans-serif;text-transform:uppercase;font-size:11.5px;
+    letter-spacing:0.06em;color:var(--ink-soft);margin:0 0 10px;
+  }
+  .product-row{
+    display:flex;gap:9px;align-items:center;flex-wrap:wrap;
+    background:var(--paper);border:1px solid var(--line);border-radius:2px;
+    padding:8px 10px;margin-bottom:8px;
+  }
+  .product-row input.p-name{
+    flex:1 1 170px;min-width:120px;
+    font-family:'Oswald',sans-serif;font-weight:600;font-size:14px;
+    border:1px solid transparent;background:transparent;padding:5px 6px;border-radius:2px;color:var(--ink);
+  }
+  .product-row input.p-name:hover{border-color:var(--line-strong);}
+  .product-row input.p-name:focus-visible{outline:2px solid var(--teal);border-color:transparent;}
+  .product-row input.p-grams{
+    width:70px;font-family:'IBM Plex Mono',monospace;font-size:14px;
+    border:1px solid var(--line-strong);background:var(--paper-raised);
+    padding:6px 7px;border-radius:2px;color:var(--ink);
+  }
+  .product-row select.p-kind{
+    width:118px;font-family:'Inter',sans-serif;font-size:13px;
+    border:1px solid var(--line-strong);background:var(--paper-raised);
+    padding:6px 7px;border-radius:2px;color:var(--ink);
+  }
+  .product-row .p-unit{font-size:12px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;}
+  .product-row input:focus-visible, .product-row select:focus-visible{outline:2px solid var(--teal);}
+
+  .bottle-config{
+    margin-top:20px;padding-top:18px;border-top:1px solid var(--line);
+  }
+  .bottle-config-title{
+    font-family:'Oswald',sans-serif;text-transform:uppercase;font-size:11.5px;
+    letter-spacing:0.06em;color:var(--ink-soft);margin:0 0 12px;
+  }
+  .bottle-pair{display:flex;gap:14px;flex-wrap:wrap;}
+  .bottle-box{
+    flex:1 1 220px;background:var(--paper);border:1px solid var(--line);border-radius:2px;padding:12px 14px 14px;
+    transition:opacity .15s ease;
+  }
+  .bottle-box.hidden{display:none;}
+  .bottle-box-title{
+    font-family:'Oswald',sans-serif;font-weight:600;font-size:13px;margin:0 0 10px;color:var(--ink);
+  }
+  .bottle-box .input-grid{grid-template-columns:1fr 1fr;gap:10px;}
+  .checkbox-label{
+    display:flex;align-items:center;gap:9px;margin-top:16px;font-size:13.5px;color:var(--ink);
+    cursor:pointer;user-select:none;
+  }
+  .checkbox-label input[type="checkbox"]{
+    width:17px;height:17px;accent-color:var(--teal);cursor:pointer;flex-shrink:0;
+  }
+  #extra-recharge-box{margin-top:12px;}
+  #extra-recharge-box.hidden{display:none;}
+  .field.hidden{display:none;}
+  #alt-list{margin:0 0 14px;padding:0;list-style:none;}
+  #alt-list li{
+    padding:10px 12px;margin-bottom:8px;background:var(--paper);
+    border:1px solid var(--line);border-left:3px solid var(--yellow);
+    border-radius:2px;font-size:13.5px;line-height:1.5;
+  }
+  #alt-list li b{font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
+  #plan-basis-line{
+    color:var(--teal);font-weight:600;padding:8px 10px;background:rgba(22,128,106,0.08);
+    border-radius:2px;border:1px solid rgba(22,128,106,0.25);
+  }
+  #plan-basis-line:empty{display:none;}
+  #plan-basis-line.flash{animation:flashBg 900ms ease;}
+  @keyframes flashBg{
+    0%{background:rgba(242,183,5,0.45);}
+    100%{background:rgba(22,128,106,0.08);}
+  }
+
+  .btn{
+    font-family:'Oswald',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    font-size:13px;
+    font-weight:600;
+    padding:11px 20px;
+    border-radius:2px;
+    cursor:pointer;
+    border:1px solid var(--ink);
+  }
+  .btn-primary{background:var(--ink);color:var(--paper);}
+  .btn-primary:hover{background:var(--teal);border-color:var(--teal);}
+  .btn-secondary{background:transparent;color:var(--ink);}
+  .btn-secondary:hover{background:var(--paper);}
+  .btn-small{font-size:11.5px;padding:7px 12px;}
+  .btn:focus-visible{outline:2px solid var(--teal);outline-offset:2px;}
+
+  /* chart */
+  .chart-wrap{width:100%;overflow:hidden;}
+  .chart-wrap svg{width:100%;height:auto;display:block;}
+  .chart-caption{
+    text-align:center;font-size:11.5px;color:var(--ink-soft);margin-top:2px;
+  }
+  .chart-legend{
+    display:flex;flex-wrap:wrap;gap:12px 18px;margin-top:16px;padding-top:14px;
+    border-top:1px solid var(--line);font-size:12px;color:var(--ink-soft);
+  }
+  .chart-legend span{display:inline-flex;align-items:center;white-space:nowrap;}
+  .chart-legend i{
+    display:inline-block;width:12px;height:12px;margin-right:5px;flex-shrink:0;
+  }
+  .chart-legend i.dot{border-radius:50%;}
+  .chart-legend i.bar{width:22px;height:7px;border-radius:2px;}
+  .legend-sep{width:1px;align-self:stretch;background:var(--line);margin:0 2px;}
+
+  /* climbs list */
+  #climbs-list{display:flex;flex-direction:column;gap:10px;}
+  .climb-item{
+    display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+    padding:10px 12px;background:var(--paper);border:1px solid var(--line);border-radius:2px;
+  }
+  .climb-item input.climb-name{
+    font-family:'Oswald',sans-serif;font-weight:600;font-size:14px;
+    border:1px solid transparent;background:transparent;padding:4px 6px;
+    border-radius:2px;min-width:120px;flex:0 1 180px;color:var(--ink);
+  }
+  .climb-item input.climb-name:hover{border-color:var(--line-strong);}
+  .climb-item input.climb-name:focus-visible{outline:2px solid var(--teal);border-color:transparent;}
+  .climb-stats{font-size:12px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;}
+  .empty-note{font-size:13px;color:var(--ink-soft);font-style:italic;}
+
+  /* table */
+  .table-scroll{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;min-width:560px;}
+  thead th{
+    text-align:left;font-family:'Oswald',sans-serif;text-transform:uppercase;
+    font-size:11px;letter-spacing:0.06em;color:var(--ink-soft);
+    padding:6px 9px;border-bottom:2px solid var(--ink);white-space:nowrap;
+  }
+  tbody td{padding:5px 9px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  tbody tr.row-highlight{background:rgba(242,183,5,0.25);}
+  tbody input, tbody select{
+    border:1px solid transparent;background:transparent;font:inherit;color:var(--ink);
+    padding:5px 6px;border-radius:2px;width:100%;
+  }
+  tbody input:hover, tbody select:hover{border-color:var(--line-strong);}
+  tbody input:focus-visible, tbody select:focus-visible{outline:2px solid var(--teal);border-color:transparent;}
+  .cell-km{width:78px;font-family:'IBM Plex Mono',monospace;}
+  .cell-grams{width:66px;font-family:'IBM Plex Mono',monospace;}
+  .time-cell{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink-soft);white-space:nowrap;}
+  .cell-label{min-width:170px;font-size:13.5px;}
+  .btn-del{
+    background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;
+    padding:4px 6px;line-height:1;border-radius:2px;
+  }
+  .btn-del:hover{background:rgba(198,46,36,0.1);}
+  .btn-del:focus-visible{outline:2px solid var(--red);}
+  .table-actions{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;}
+
+  /* summary */
+  .summary-card{background:var(--ink);color:var(--paper);}
+  .summary-card h2{color:rgba(239,241,234,0.65);}
+  .summary-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:18px;
+  }
+  .stat{text-align:left;}
+  .stat .val{
+    font-family:'Oswald',sans-serif;font-weight:700;font-size:32px;line-height:1;
+  }
+  .stat .lbl{
+    font-size:11.5px;text-transform:uppercase;letter-spacing:0.06em;
+    color:rgba(239,241,234,0.65);margin-top:6px;
+  }
+  .summary-note{
+    margin-top:18px;padding-top:16px;border-top:1px solid rgba(239,241,234,0.2);
+    font-size:12.5px;color:rgba(239,241,234,0.75);
+  }
+
+  /* legenda livelli */
+  .lv-item{
+    display:grid;
+    grid-template-columns:112px 1fr 180px;
+    gap:12px;
+    align-items:baseline;
+    padding:10px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .lv-item:last-of-type{border-bottom:none;}
+  .lv-name{font-family:'Oswald',sans-serif;font-weight:600;font-size:15px;}
+  .lv-desc{font-size:13.5px;color:var(--ink-soft);}
+  .lv-num{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);text-align:right;}
+  @media (max-width:640px){
+    .lv-item{grid-template-columns:1fr;gap:3px;}
+    .lv-num{text-align:left;}
+  }
+
+  .app-footer{
+    max-width:960px;margin:0 auto;padding:0 16px 40px;font-size:12px;color:var(--ink-soft);
+  }
+
+  @media (max-width:640px){
+    .app-header h1{font-size:19px;}
+    main{padding:16px 12px 60px;}
+    .card{padding:16px;}
+    .stat .val{font-size:26px;}
+    .dropzone{padding:24px 14px;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .dropzone, tbody tr{transition:none;}
+    #plan-basis-line.flash{animation:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <svg class="logo" width="42" height="42" viewBox="0 0 120 120" aria-hidden="true">
+    <circle cx="60" cy="60" r="46" fill="none" stroke="#EFF1EA" stroke-width="4"/>
+    <circle cx="60" cy="60" r="14" fill="none" stroke="#EFF1EA" stroke-width="4"/>
+    <g fill="#EFF1EA">
+      <rect x="56" y="6" width="8" height="16" rx="1"/>
+      <rect x="56" y="6" width="8" height="16" rx="1" transform="rotate(45 60 60)"/>
+      <rect x="56" y="6" width="8" height="16" rx="1" transform="rotate(90 60 60)"/>
+      <rect x="56" y="6" width="8" height="16" rx="1" transform="rotate(135 60 60)"/>
+      <rect x="56" y="6" width="8" height="16" rx="1" transform="rotate(180 60 60)"/>
+      <rect x="56" y="6" width="8" height="16" rx="1" transform="rotate(225 60 60)"/>
+      <rect x="56" y="6" width="8" height="16" rx="1" transform="rotate(270 60 60)"/>
+      <rect x="56" y="6" width="8" height="16" rx="1" transform="rotate(315 60 60)"/>
+    </g>
+  </svg>
+  <div>
+    <h1>Carbo Bike</h1>
+    <p>Piano di integrazione carboidrati da percorso GPX, TCX o FIT</p>
+  </div>
+</header>
+
+<main>
+
+  <section class="card" id="upload-card">
+    <h2>1 · Percorso</h2>
+    <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Carica il file del percorso">
+      <input type="file" id="file-input" accept=".gpx,.tcx,.fit" hidden>
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 3v12M12 3l-4 4M12 3l4 4" stroke="#4B5147" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="#4B5147" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <p class="dz-title">Trascina qui il file del percorso</p>
+      <p class="dz-sub">.gpx, .tcx o .fit — oppure tocca per selezionarlo dal dispositivo</p>
+      <p class="dz-error hidden" id="dz-error"></p>
+      <p class="dz-success hidden" id="dz-success"></p>
+    </div>
+  </section>
+
+  <section class="card hidden" id="input-card">
+    <h2>2 · Scheda gara</h2>
+
+    <div class="input-grid">
+      <div class="field">
+        <label for="inp-level">Livello di ciclista</label>
+        <select id="inp-level">
+          <option value="principiante">Principiante</option>
+          <option value="tranquillo">Tranquillo</option>
+          <option value="allenato" selected>Allenato</option>
+          <option value="agonista">Agonista</option>
+          <option value="semipro">Semi-Pro</option>
+          <option value="custom">Personalizzato</option>
+        </select>
+        <p class="field-hint">imposta passo in salita e velocità in pianura</p>
+      </div>
+      <div class="field">
+        <label for="inp-target">Target carboidrati/ora</label>
+        <input type="number" id="inp-target" inputmode="numeric" min="20" max="100" step="5" value="60">
+        <p class="field-hint">g/h — suggerito in base alla durata, modificabile</p>
+      </div>
+    </div>
+
+    <div class="level-readout" id="level-readout">
+      <p class="lr-blurb" id="lr-blurb"></p>
+      <p class="lr-nums" id="lr-nums"></p>
+    </div>
+
+    <div class="hidden" id="custom-fields">
+      <div class="input-grid">
+        <div class="field">
+          <label for="inp-speed">Velocità media fuori salita</label>
+          <input type="number" id="inp-speed" inputmode="decimal" min="10" max="45" step="0.5" value="27">
+          <p class="field-hint">km/h — usata in piano e discesa</p>
+        </div>
+        <div class="field">
+          <label for="inp-climb-mode">Passo in salita</label>
+          <select id="inp-climb-mode">
+            <option value="wkg" selected>Peso/potenza (W/kg)</option>
+            <option value="vam">VAM (m/h)</option>
+          </select>
+          <p class="field-hint">come stimare il tempo di scalata</p>
+        </div>
+        <div class="field hidden" id="vam-field">
+          <label for="inp-vam">VAM in salita</label>
+          <input type="number" id="inp-vam" inputmode="numeric" min="300" max="1600" step="50" value="890">
+          <p class="field-hint">m/h — velocità ascensionale media</p>
+        </div>
+        <div class="field" id="wkg-field">
+          <label for="inp-wkg">Rapporto peso/potenza</label>
+          <input type="number" id="inp-wkg" inputmode="decimal" min="1" max="7" step="0.1" value="3.3">
+          <p class="field-hint" id="wkg-hint">W/kg sostenuti in salita</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="products">
+      <p class="products-title">Cosa porti in tasca</p>
+      <div id="products-list"></div>
+      <button class="btn btn-secondary btn-small" id="btn-add-product">+ Aggiungi prodotto</button>
+      <p class="field-hint">Gel e barrette con la loro grammatura reale: il piano sceglie di volta in volta quello giusto e nelle alternative ti propone lo scambio tra l'uno e l'altro.</p>
+    </div>
+
+    <div class="bottle-config">
+      <p class="bottle-config-title">Borracce in gara</p>
+      <div class="field" style="max-width:200px;margin-bottom:14px;">
+        <label for="inp-bottle-count">Numero borracce</label>
+        <select id="inp-bottle-count">
+          <option value="1">1 borraccia</option>
+          <option value="2" selected>2 borracce</option>
+        </select>
+      </div>
+      <div class="bottle-pair">
+        <div class="bottle-box" id="bottle1-box">
+          <p class="bottle-box-title">Borraccia 1</p>
+          <div class="input-grid">
+            <div class="field">
+              <label for="inp-bottle1-ml">Capacità</label>
+              <input type="number" id="inp-bottle1-ml" inputmode="numeric" min="250" max="1000" step="50" value="500">
+              <p class="field-hint">ml</p>
+            </div>
+            <div class="field">
+              <label for="inp-bottle1-carbs">Carboidrati</label>
+              <input type="number" id="inp-bottle1-carbs" inputmode="numeric" min="0" max="120" step="1" value="60">
+              <p class="field-hint">grammi di polvere sciolta</p>
+            </div>
+          </div>
+        </div>
+        <div class="bottle-box" id="bottle2-box">
+          <p class="bottle-box-title">Borraccia 2</p>
+          <div class="input-grid">
+            <div class="field">
+              <label for="inp-bottle2-ml">Capacità</label>
+              <input type="number" id="inp-bottle2-ml" inputmode="numeric" min="250" max="1000" step="50" value="500">
+              <p class="field-hint">ml</p>
+            </div>
+            <div class="field">
+              <label for="inp-bottle2-carbs">Carboidrati</label>
+              <input type="number" id="inp-bottle2-carbs" inputmode="numeric" min="0" max="120" step="1" value="40">
+              <p class="field-hint">grammi di polvere sciolta</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="field-hint">Le borracce configurate sono quelle che riempi tu alla partenza (nell'ordine, borraccia 1 poi borraccia 2). Le ricariche successive lungo il percorso sono di sola acqua, tranne al ristoro indicato qui sotto.</p>
+
+      <label class="checkbox-label" for="inp-hide-water">
+        <input type="checkbox" id="inp-hide-water">
+        Nascondi i ricambi di sola acqua dal grafico e dal road book
+      </label>
+
+      <label class="checkbox-label" for="inp-extra-recharge">
+        <input type="checkbox" id="inp-extra-recharge">
+        C'è un ristoro dove posso ricaricare la borraccia con i carboidrati
+      </label>
+      <div class="hidden" id="extra-recharge-box">
+        <div class="input-grid" style="max-width:420px;">
+          <div class="field">
+            <label for="inp-ristoro-km">Ristoro al km</label>
+            <input type="number" id="inp-ristoro-km" inputmode="decimal" min="0" step="0.1" value="0">
+            <p class="field-hint" id="ristoro-km-hint">km esatto del percorso</p>
+          </div>
+          <div class="field">
+            <label for="inp-extra-recharge-carbs">Carboidrati al ristoro</label>
+            <input type="number" id="inp-extra-recharge-carbs" inputmode="numeric" min="0" max="120" step="1" value="60">
+            <p class="field-hint">grammi di polvere sciolta</p>
+          </div>
+        </div>
+        <p class="field-hint">È l'unico punto del percorso in cui la borraccia viene ricaricata con i carboidrati: tutte le altre ricariche restano di sola acqua.</p>
+      </div>
+    </div>
+    <div class="input-actions">
+      <button class="btn btn-primary" id="btn-generate">Genera piano di rifornimento</button>
+      <span class="field-hint" id="route-stats-line" style="align-self:center;"></span>
+    </div>
+    <p class="field-hint" id="plan-basis-line" style="margin-top:10px;"></p>
+  </section>
+
+  <section class="card hidden" id="chart-card">
+    <h2>3 · Profilo altimetrico e marker di rifornimento</h2>
+    <div class="chart-wrap" id="chart-wrap"></div>
+    <p class="chart-caption">km percorsi · tocca un marker per aprire la relativa riga nella tabella sotto</p>
+    <div class="chart-legend">
+      <span><i style="background:#F2B705"></i>3–6%</span>
+      <span><i style="background:#E8720C"></i>6–9%</span>
+      <span><i style="background:#C62E24"></i>9–13%</span>
+      <span><i style="background:#4A1414"></i>&gt;13%</span>
+      <span><i style="background:#BFD8E6"></i>discesa</span>
+      <span class="legend-sep"></span>
+      <span><i class="dot" style="background:#16806A"></i>Gel</span>
+      <span><i class="dot" style="background:#6B3FA0"></i>Barretta</span>
+      <span><i class="dot" style="background:#1F6FA8"></i>Borraccia con carbo</span>
+      <span><i class="dot" style="background:#8C97A0"></i>Borraccia sola acqua</span>
+      <span><i class="dot" style="background:#C62E24"></i>Ristoro</span>
+      <span class="legend-sep"></span>
+      <span><i class="bar" style="background:#1F6FA8"></i>tratto coperto dalla borraccia con carbo</span>
+    </div>
+  </section>
+
+  <section class="card hidden" id="climbs-card">
+    <h2>4 · Salite rilevate <span style="font-weight:400;">(rinominabili)</span></h2>
+    <div id="climbs-list"></div>
+  </section>
+
+  <section class="card hidden" id="table-card">
+    <h2>5 · Road book — piano di rifornimento</h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Km</th><th>Tempo</th><th>Cosa</th><th>Carbo</th><th>Etichetta</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="events-tbody"></tbody>
+      </table>
+    </div>
+    <div class="table-actions">
+      <button class="btn btn-secondary" id="btn-add-point">+ Aggiungi punto</button>
+    </div>
+  </section>
+
+  <section class="card hidden" id="alt-card">
+    <h2>6 · Alternative da valutare</h2>
+    <ul id="alt-list"></ul>
+    <p class="field-hint">Suggerimenti opzionali: applicali a mano nella tabella sopra se ti convincono.</p>
+  </section>
+
+  <section class="card summary-card hidden" id="summary-card">
+    <h2>Riepilogo cassetta</h2>
+    <div class="summary-grid">
+      <div class="stat"><div class="val mono" id="sum-gel">0</div><div class="lbl">Gel</div><div class="lbl" id="sum-gel-split" style="margin-top:2px;"></div></div>
+      <div class="stat"><div class="val mono" id="sum-bar">0</div><div class="lbl">Barrette</div><div class="lbl" id="sum-bar-split" style="margin-top:2px;"></div></div>
+      <div class="stat"><div class="val mono" id="sum-bottle">0</div><div class="lbl">Borracce</div><div class="lbl" id="sum-bottle-split" style="margin-top:2px;"></div></div>
+      <div class="stat"><div class="val mono" id="sum-total">0 g</div><div class="lbl">Carbo totali</div></div>
+      <div class="stat"><div class="val mono" id="sum-rate">0 g/h</div><div class="lbl" id="sum-target">target</div></div>
+      <div class="stat"><div class="val mono" id="sum-time">00:00</div><div class="lbl">Tempo stimato</div></div>
+    </div>
+    <p class="summary-note">Stime indicative basate su euristiche generiche di nutrizione sportiva (fabbisogno carboidrati/ora per durata, ~600ml/h di idratazione). Adatta sempre il piano a sensazioni, caldo, umidità e quota — e testalo in allenamento prima della gara.</p>
+  </section>
+
+  <section class="card" id="levels-card">
+    <h2>Che ciclista sei</h2>
+    <div class="lv-item">
+      <span class="lv-name">Principiante</span>
+      <span class="lv-desc">Hai iniziato da poco. In salita l'obiettivo è arrivare in cima, il tempo non conta.</span>
+      <span class="lv-num">2,0 W/kg · VAM ~540 m/h · 21 km/h</span>
+    </div>
+    <div class="lv-item">
+      <span class="lv-name">Tranquillo</span>
+      <span class="lv-desc">Esci con regolarità nel weekend, ritmo cicloturistico sportivo, niente cronometro.</span>
+      <span class="lv-num">2,6 W/kg · VAM ~700 m/h · 24 km/h</span>
+    </div>
+    <div class="lv-item">
+      <span class="lv-name">Allenato</span>
+      <span class="lv-desc">Ti alleni in modo strutturato. Chiudi una granfondo senza andare in crisi.</span>
+      <span class="lv-num">3,3 W/kg · VAM ~890 m/h · 27 km/h</span>
+    </div>
+    <div class="lv-item">
+      <span class="lv-name">Agonista</span>
+      <span class="lv-desc">Corri le granfondo cercando il tempo, non solo l'arrivo. Salita a ritmo alto.</span>
+      <span class="lv-num">4,1 W/kg · VAM ~1105 m/h · 30 km/h</span>
+    </div>
+    <div class="lv-item">
+      <span class="lv-name">Semi-Pro</span>
+      <span class="lv-desc">Élite amatoriale: lotti per le prime posizioni di categoria.</span>
+      <span class="lv-num">5,0 W/kg · VAM ~1350 m/h · 33 km/h</span>
+    </div>
+    <p class="field-hint" style="margin-top:14px;">
+      I W/kg indicati non sono la tua FTP, ma la potenza che riesci davvero a tenere in salita dentro una gara lunga: circa l'85–90% della FTP. Le fasce nascono dalla tabella di power profiling di Coggan; le VAM corrispondenti sono calcolate su una salita al 7% e nell'app vengono ricalcolate sulla pendenza reale del percorso caricato. Riferimenti: 700–1000 m/h è la fascia della maggioranza dei cicloamatori, 900–1100 m/h un amatore allenato, 1200–1400 m/h un agonista evoluto.
+    </p>
+  </section>
+
+</main>
+
+<footer class="app-footer">
+  Carbo Bike — tutti i calcoli avvengono nel browser, nessun dato lascia il dispositivo.
+</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  // ============================================================
+  //  LIVELLI DI CICLISTA
+  //  wkg = potenza sostenuta in salita in gara (~85-90% della FTP),
+  //  speed = velocità media sui tratti che non sono vera salita.
+  // ============================================================
+  const LEVELS = {
+    principiante:{ label:'Principiante', wkg:2.0, speed:21,
+      blurb:'Hai iniziato da poco: in salita l\u2019obiettivo è arrivare in cima, non il tempo.' },
+    tranquillo:{ label:'Tranquillo', wkg:2.6, speed:24,
+      blurb:'Esci con regolarità nel weekend, ritmo cicloturistico sportivo.' },
+    allenato:{ label:'Allenato', wkg:3.3, speed:27,
+      blurb:'Ti alleni in modo strutturato: chiudi una granfondo senza andare in crisi.' },
+    agonista:{ label:'Agonista', wkg:4.1, speed:30,
+      blurb:'Corri le granfondo cercando il tempo, non solo l\u2019arrivo.' },
+    semipro:{ label:'Semi-Pro', wkg:5.0, speed:33,
+      blurb:'Élite amatoriale: lotti per le prime posizioni di categoria.' }
+  };
+
+  const state = {
+    resampled: null,
+    segments3: null,
+    climbs: [],
+    events: [],
+    products: [
+      { id:'p1', name:'Gel base',          kind:'gel', grams:25 },
+      { id:'p2', name:'Gel 2:1 (1:0.8)',   kind:'gel', grams:40 },
+      { id:'p3', name:'Barretta',          kind:'bar', grams:25 }
+    ],
+    productSeq: 4,
+    totalKm: 0,
+    totalElevGainAll: 0,
+    waterRate: 600,
+    targetGHManual: false,
+    inputs: { level:'allenato', speed:27, targetGH:60, climbMode:'wkg', vam:890, wkg:3.3,
+              bottleCount:2, bottle1Ml:500, bottle1Carbs:60, bottle2Ml:500, bottle2Carbs:40,
+              hideWater:false, ristoro:false, ristoroKm:0, ristoroCarbs:60 }
+  };
+
+  const BIN_COLORS = { flat:'#DCE4CE', descent:'#BFD8E6', yellow:'#F2B705', orange:'#E8720C', red:'#C62E24', steep:'#4A1414' };
+  const MARKER_COLORS = { gel:'#16806A', bar:'#6B3FA0', bottleCarb:'#1F6FA8', bottleWater:'#8C97A0', ristoro:'#C62E24' };
+
+  // ---------- utilities ----------
+  function escapeXML(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+  }
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+  function formatTime(h){
+    const totalMin = Math.max(0, Math.round(h*60));
+    const hh = Math.floor(totalMin/60), mm = totalMin%60;
+    return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+  }
+  function niceStep(range){
+    if(range<=0) return 1;
+    const rough = range/6;
+    const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+    const norm = rough/mag;
+    let step;
+    if(norm<1.5) step=1; else if(norm<3) step=2; else if(norm<7) step=5; else step=10;
+    return step*mag;
+  }
+  function haversine(lat1,lon1,lat2,lon2){
+    const R=6371000, toRad=d=>d*Math.PI/180;
+    const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
+    const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  }
+
+  // ---------- prodotti ----------
+  function productById(id){ return state.products.find(p=>p.id===id) || null; }
+  function productsOfKind(k){ return state.products.filter(p=>p.kind===k && p.grams>0); }
+  function strongestOf(kind){
+    const l = productsOfKind(kind);
+    if(l.length===0) return null;
+    return l.slice().sort((a,b)=>b.grams-a.grams)[0];
+  }
+  function nearestOf(kind, grams){
+    const l = productsOfKind(kind);
+    if(l.length===0) return null;
+    return l.slice().sort((a,b)=>Math.abs(a.grams-grams)-Math.abs(b.grams-grams))[0];
+  }
+  function nearestAny(grams){
+    const l = state.products.filter(p=>p.grams>0);
+    if(l.length===0) return null;
+    return l.slice().sort((a,b)=>Math.abs(a.grams-grams)-Math.abs(b.grams-grams))[0];
+  }
+  function itemName(ev){
+    const p = productById(ev.productId);
+    if(p) return p.name;
+    return ev.type==='gel' ? 'Gel' : ev.type==='bar' ? 'Barretta' : 'Borraccia';
+  }
+
+  // ---------- parsing percorso: GPX / TCX / FIT ----------
+  // Di un file di attività si prende solo la traccia (coordinate e quota):
+  // i tempi realmente impiegati vengono ignorati, il piano è sempre costruito
+  // sul modello di stima e sul livello di ciclista impostato.
+  function fillMissingElevation(pts){
+    const anyValid = pts.some(p=>Number.isFinite(p.ele));
+    if(!anyValid){ pts.forEach(p=>p.ele=0); return; }
+    let lastValid=null;
+    for(let i=0;i<pts.length;i++){
+      if(Number.isFinite(pts[i].ele)){ lastValid=i; continue; }
+      let next=null;
+      for(let j=i+1;j<pts.length;j++){ if(Number.isFinite(pts[j].ele)){ next=j; break; } }
+      if(lastValid===null && next!==null) pts[i].ele=pts[next].ele;
+      else if(lastValid!==null && next===null) pts[i].ele=pts[lastValid].ele;
+      else if(lastValid!==null && next!==null){
+        const t=(i-lastValid)/(next-lastValid);
+        pts[i].ele = pts[lastValid].ele + t*(pts[next].ele-pts[lastValid].ele);
+      } else pts[i].ele=0;
+    }
+  }
+  function parseXMLDoc(text, formato){
+    const xml = new DOMParser().parseFromString(text,'application/xml');
+    if(xml.getElementsByTagName('parsererror').length>0){
+      throw new Error('File '+formato+' non valido o corrotto.');
+    }
+    return xml;
+  }
+  function parseGPXText(text){
+    const xml = parseXMLDoc(text,'GPX');
+    let nodes = xml.getElementsByTagName('trkpt');
+    if(!nodes || nodes.length<2) nodes = xml.getElementsByTagName('rtept');
+    if(!nodes || nodes.length<2){
+      throw new Error('Nessun tracciato trovato nel file GPX.');
+    }
+    const pts=[];
+    for(let i=0;i<nodes.length;i++){
+      const p=nodes[i];
+      const lat=parseFloat(p.getAttribute('lat'));
+      const lon=parseFloat(p.getAttribute('lon'));
+      const eleEl=p.getElementsByTagName('ele')[0];
+      const ele = eleEl ? parseFloat(eleEl.textContent) : NaN;
+      if(Number.isFinite(lat) && Number.isFinite(lon)) pts.push({lat,lon,ele});
+    }
+    if(pts.length<2) throw new Error('Coordinate GPX insufficienti per calcolare un profilo.');
+    fillMissingElevation(pts);
+    return pts;
+  }
+  function parseTCXText(text){
+    const xml = parseXMLDoc(text,'TCX');
+    const nodes = xml.getElementsByTagName('Trackpoint');
+    if(!nodes || nodes.length<2){
+      throw new Error('Nessun tracciato (Trackpoint) trovato nel file TCX.');
+    }
+    const txt = (el,tag)=>{
+      const n = el.getElementsByTagName(tag)[0];
+      return n ? parseFloat(n.textContent) : NaN;
+    };
+    const pts=[];
+    for(let i=0;i<nodes.length;i++){
+      const tp = nodes[i];
+      const pos = tp.getElementsByTagName('Position')[0];
+      if(!pos) continue;
+      const lat = txt(pos,'LatitudeDegrees');
+      const lon = txt(pos,'LongitudeDegrees');
+      const ele = txt(tp,'AltitudeMeters');
+      if(Number.isFinite(lat) && Number.isFinite(lon)) pts.push({lat,lon,ele});
+    }
+    if(pts.length<2) throw new Error('Coordinate TCX insufficienti per calcolare un profilo.');
+    fillMissingElevation(pts);
+    return pts;
+  }
+
+  // decoder FIT minimale: legge i soli messaggi "record" (global message 20),
+  // da cui servono posizione e quota. Tutto il resto viene saltato in base
+  // alla lunghezza dichiarata nei messaggi di definizione.
+  const FIT_BASE_SIZES = {0:1,1:1,2:1,3:2,4:2,5:4,6:4,7:1,8:4,9:8,10:1,11:2,12:4,13:1,14:8,15:8,16:8};
+  function fitReadValue(dv,pos,field,little){
+    const expected = FIT_BASE_SIZES[field.base] || 1;
+    if(field.size !== expected) return null; // array o stringa: non serve
+    switch(field.base){
+      case 0: case 2: case 10: case 13: { const v=dv.getUint8(pos); return v===0xFF?null:v; }
+      case 1: { const v=dv.getInt8(pos); return v===0x7F?null:v; }
+      case 3: { const v=dv.getInt16(pos,little); return v===0x7FFF?null:v; }
+      case 4: case 11: { const v=dv.getUint16(pos,little); return v===0xFFFF?null:v; }
+      case 5: { const v=dv.getInt32(pos,little); return v===0x7FFFFFFF?null:v; }
+      case 6: case 12: { const v=dv.getUint32(pos,little); return v===0xFFFFFFFF?null:v; }
+      case 8: { const v=dv.getFloat32(pos,little); return Number.isFinite(v)?v:null; }
+      case 9: { const v=dv.getFloat64(pos,little); return Number.isFinite(v)?v:null; }
+      default: return null;
+    }
+  }
+  const SEMI = 180/2147483648;
+  function parseFITBuffer(buffer){
+    const dv = new DataView(buffer);
+    if(buffer.byteLength < 14) throw new Error('File FIT troppo corto o incompleto.');
+    const headerSize = dv.getUint8(0);
+    if(headerSize < 12 || headerSize > 32) throw new Error('File FIT non valido (intestazione inattesa).');
+    const magic = String.fromCharCode(dv.getUint8(8),dv.getUint8(9),dv.getUint8(10),dv.getUint8(11));
+    if(magic !== '.FIT') throw new Error('File FIT non valido (firma mancante).');
+    const dataSize = dv.getUint32(4,true);
+    const end = Math.min(buffer.byteLength, headerSize + dataSize);
+    let pos = headerSize;
+    const defs = {};
+    const pts = [];
+
+    function readData(def){
+      if(!def) throw new Error('File FIT non leggibile: definizione di messaggio mancante.');
+      let lat=null, lon=null, alt=null, altEnh=null;
+      def.fields.forEach(f=>{
+        const v = fitReadValue(dv,pos,f,def.little);
+        if(def.globalNum===20 && v!==null){
+          if(f.num===0) lat = v*SEMI;
+          else if(f.num===1) lon = v*SEMI;
+          else if(f.num===2) alt = v/5 - 500;
+          else if(f.num===78) altEnh = v/5 - 500;
+        }
+        pos += f.size;
+      });
+      def.devFields.forEach(f=>{ pos += f.size; });
+      if(def.globalNum===20 && lat!==null && lon!==null && Math.abs(lat)<=90 && Math.abs(lon)<=180){
+        const ele = altEnh!==null ? altEnh : (alt!==null ? alt : NaN);
+        pts.push({lat,lon,ele});
+      }
+    }
+
+    while(pos < end){
+      const hdr = dv.getUint8(pos); pos++;
+      if(hdr & 0x80){                       // header con timestamp compresso: è un dato
+        readData(defs[(hdr>>5) & 0x03]);
+        continue;
+      }
+      const local = hdr & 0x0F;
+      if(hdr & 0x40){                       // messaggio di definizione
+        pos++;                              // byte riservato
+        const little = dv.getUint8(pos)===0; pos++;
+        const globalNum = dv.getUint16(pos,little); pos+=2;
+        const nFields = dv.getUint8(pos); pos++;
+        const fields=[];
+        for(let i=0;i<nFields;i++){
+          fields.push({ num:dv.getUint8(pos), size:dv.getUint8(pos+1), base:dv.getUint8(pos+2)&0x1F });
+          pos+=3;
+        }
+        const devFields=[];
+        if(hdr & 0x20){
+          const nDev = dv.getUint8(pos); pos++;
+          for(let i=0;i<nDev;i++){ devFields.push({ size:dv.getUint8(pos+1) }); pos+=3; }
+        }
+        defs[local] = {globalNum, little, fields, devFields};
+      } else {
+        readData(defs[local]);
+      }
+    }
+    if(pts.length<2) throw new Error('Nessun punto GPS utilizzabile nel file FIT (traccia senza coordinate?).');
+    fillMissingElevation(pts);
+    return pts;
+  }
+
+  function buildCumulative(pts){
+    const out=[{lat:pts[0].lat,lon:pts[0].lon,ele:pts[0].ele,km:0}];
+    let cum=0;
+    for(let i=1;i<pts.length;i++){
+      const d = haversine(pts[i-1].lat,pts[i-1].lon,pts[i].lat,pts[i].lon)/1000;
+      if(d<0.0001) continue;
+      cum+=d;
+      out.push({lat:pts[i].lat,lon:pts[i].lon,ele:pts[i].ele,km:cum});
+    }
+    if(out.length<2) throw new Error('Il percorso risulta troppo corto o con coordinate duplicate.');
+    return out;
+  }
+
+  // ---------- resample / smooth / gradients ----------
+  function resample(cumPts, stepKm){
+    const totalKm = cumPts[cumPts.length-1].km;
+    const n = Math.max(2, Math.round(totalKm/stepKm)+1);
+    const out=[]; let j=0;
+    for(let i=0;i<n;i++){
+      const km = i===n-1 ? totalKm : Math.min(totalKm, i*stepKm);
+      while(j<cumPts.length-2 && cumPts[j+1].km<km) j++;
+      const a=cumPts[j], b=cumPts[Math.min(j+1,cumPts.length-1)];
+      let ele;
+      if(b.km===a.km) ele=a.ele;
+      else { const t=(km-a.km)/(b.km-a.km); ele=a.ele+t*(b.ele-a.ele); }
+      out.push({km, ele});
+    }
+    return out;
+  }
+  function smoothElevation(resampled, stepKm, windowMeters){
+    const half = Math.max(1, Math.round((windowMeters/1000/stepKm)/2));
+    const eles = resampled.map(p=>p.ele);
+    const smoothed = eles.map((_,i)=>{
+      let sum=0,count=0;
+      for(let k=Math.max(0,i-half); k<=Math.min(eles.length-1,i+half); k++){ sum+=eles[k]; count++; }
+      return sum/count;
+    });
+    resampled.forEach((p,i)=>p.ele=smoothed[i]);
+  }
+  function computeGradients(resampled, stepKm, windowMeters){
+    const half = Math.max(1, Math.round((windowMeters/1000/stepKm)/2));
+    resampled.forEach((p,i)=>{
+      const i0=Math.max(0,i-half), i1=Math.min(resampled.length-1,i+half);
+      const dEle=resampled[i1].ele-resampled[i0].ele;
+      const dKm=resampled[i1].km-resampled[i0].km;
+      p.grad = dKm>0 ? dEle/(dKm*1000) : 0;
+    });
+  }
+  function totalElevGain(resampled){
+    let g=0;
+    for(let i=1;i<resampled.length;i++) g+=Math.max(0, resampled[i].ele-resampled[i-1].ele);
+    return g;
+  }
+
+  // ---------- classification & segments ----------
+  // Soglia unica che separa "vera salita" da falsopiano e discesa. Sotto il 4% si
+  // pedala ancora sostanzialmente di slancio e di ritmo, non di rapporto peso/potenza:
+  // per questo il tempo lì si stima dalla velocità media e non dalla VAM.
+  const CLIMB_GRAD_THRESHOLD = 0.04;
+  function classify3(grad){
+    if(grad>=CLIMB_GRAD_THRESHOLD) return 'climb';
+    if(grad<=-CLIMB_GRAD_THRESHOLD) return 'descent';
+    return 'flat';
+  }
+  function classifyBin(grad){
+    if(grad<=-0.025) return 'descent';
+    if(grad<0.03) return 'flat';
+    if(grad<0.06) return 'yellow';
+    if(grad<0.09) return 'orange';
+    if(grad<0.13) return 'red';
+    return 'steep';
+  }
+  function mergeSegments(resampled, classifyFn, minLenKm){
+    const raw=[]; let cur=null;
+    resampled.forEach((p,i)=>{
+      const cls=classifyFn(p.grad);
+      if(!cur || cur.cls!==cls){ if(cur) raw.push(cur); cur={cls,startIdx:i,endIdx:i}; }
+      else cur.endIdx=i;
+    });
+    if(cur) raw.push(cur);
+    const merged=[];
+    for(const seg of raw){
+      const lenKm = resampled[seg.endIdx].km - resampled[seg.startIdx].km;
+      if(lenKm<minLenKm && merged.length>0) merged[merged.length-1].endIdx=seg.endIdx;
+      else merged.push(seg);
+    }
+    const final=[];
+    for(const seg of merged){
+      if(final.length>0 && final[final.length-1].cls===seg.cls) final[final.length-1].endIdx=seg.endIdx;
+      else final.push(Object.assign({},seg));
+    }
+    return final.map(seg=>{
+      const a=resampled[seg.startIdx], b=resampled[seg.endIdx];
+      const elevGain=Math.max(0,b.ele-a.ele), elevLoss=Math.max(0,a.ele-b.ele);
+      const lengthKm=b.km-a.km;
+      const avgGrad = lengthKm>0 ? (b.ele-a.ele)/(lengthKm*1000) : 0;
+      return {cls:seg.cls, startIdx:seg.startIdx, endIdx:seg.endIdx, startKm:a.km, endKm:b.km, lengthKm, elevGain, elevLoss, avgGrad};
+    });
+  }
+  function categorize(elevGain){
+    if(elevGain>=800) return 'HC';
+    if(elevGain>=500) return '1ª cat.';
+    if(elevGain>=300) return '2ª cat.';
+    if(elevGain>=150) return '3ª cat.';
+    if(elevGain>=80) return '4ª cat.';
+    return null;
+  }
+  function buildClimbs(segments3){
+    const climbs=[]; let idx=1;
+    segments3.filter(s=>s.cls==='climb').forEach(s=>{
+      if(s.lengthKm>=0.8 || s.elevGain>=40){
+        climbs.push({
+          id:'c'+idx, name:'Salita '+idx, startKm:s.startKm, endKm:s.endKm,
+          lengthKm:s.lengthKm, elevGain:s.elevGain, avgGrad:s.avgGrad, category:categorize(s.elevGain)
+        });
+        idx++;
+      }
+    });
+    return climbs;
+  }
+
+  // ---------- modello di tempo ----------
+  // Due soli regimi, niente correzioni intermedie:
+  //  · vera salita (≥4%)  → tempo = dislivello / VAM
+  //  · tutto il resto     → tempo = distanza / velocità media
+  // La VAM e la velocità media derivano entrambe dal livello di ciclista impostato.
+  function avgClimbGradPct(){
+    if(!state.climbs || state.climbs.length===0) return 7;
+    let num=0, den=0;
+    state.climbs.forEach(c=>{ num += (c.avgGrad*100)*c.elevGain; den += c.elevGain; });
+    const g = den>0 ? num/den : 7;
+    return clamp(g, 3, 15);
+  }
+  // Conversione W/kg -> VAM secondo la relazione di Ferrari:
+  // VAM (m/h) ≈ W/kg × (200 + 10 × pendenza%). Più la salita è ripida, più della
+  // potenza va in sollevamento (meno in attrito e aria), quindi la stessa W/kg
+  // produce una VAM più alta.
+  function vamFromWkg(wkg){
+    return clamp(wkg * (200 + 10*avgClimbGradPct()), 200, 2500);
+  }
+  function effectiveWkg(){
+    const i = state.inputs;
+    if(i.level!=='custom') return LEVELS[i.level].wkg;
+    return i.wkg;
+  }
+  function effectiveVam(){
+    const i = state.inputs;
+    if(i.level!=='custom') return vamFromWkg(LEVELS[i.level].wkg);
+    return i.climbMode==='wkg' ? vamFromWkg(i.wkg) : (i.vam>0 ? i.vam : 800);
+  }
+  function effectiveSpeed(){
+    const i = state.inputs;
+    if(i.level!=='custom') return LEVELS[i.level].speed;
+    return i.speed>0 ? i.speed : 24;
+  }
+  function computeTimes(resampled, avgSpeedKmh, vamMh){
+    const speed = avgSpeedKmh>0 ? avgSpeedKmh : 20;
+    const vam = vamMh>0 ? vamMh : 800;
+    resampled[0].cumH = 0;
+    for(let i=1;i<resampled.length;i++){
+      const dKm = resampled[i].km - resampled[i-1].km;
+      const grad = ((resampled[i].grad||0)+(resampled[i-1].grad||0))/2;
+      let dt;
+      if(grad >= CLIMB_GRAD_THRESHOLD){
+        const dElev = grad*dKm*1000; // metri di dislivello guadagnati in questo tratto
+        dt = dElev>0 ? dElev/vam : dKm/speed;
+      } else {
+        dt = dKm/speed;
+      }
+      resampled[i].cumH = resampled[i-1].cumH + dt;
+    }
+    return resampled[resampled.length-1].cumH;
+  }
+  function timeAtKm(resampled, km){
+    if(km<=resampled[0].km) return resampled[0].cumH;
+    if(km>=resampled[resampled.length-1].km) return resampled[resampled.length-1].cumH;
+    let lo=0, hi=resampled.length-1;
+    while(hi-lo>1){ const mid=(lo+hi)>>1; if(resampled[mid].km<km) lo=mid; else hi=mid; }
+    const a=resampled[lo], b=resampled[hi];
+    const t=(km-a.km)/((b.km-a.km)||1);
+    return a.cumH + t*(b.cumH-a.cumH);
+  }
+  function kmAtTime(resampled, h){
+    if(h<=resampled[0].cumH) return resampled[0].km;
+    if(h>=resampled[resampled.length-1].cumH) return resampled[resampled.length-1].km;
+    let lo=0, hi=resampled.length-1;
+    while(hi-lo>1){ const mid=(lo+hi)>>1; if(resampled[mid].cumH<h) lo=mid; else hi=mid; }
+    const a=resampled[lo], b=resampled[hi];
+    const t=(h-a.cumH)/((b.cumH-a.cumH)||1);
+    return a.km + t*(b.km-a.km);
+  }
+  function eleAtKm(resampled, km){
+    if(km<=resampled[0].km) return resampled[0].ele;
+    if(km>=resampled[resampled.length-1].km) return resampled[resampled.length-1].ele;
+    let lo=0, hi=resampled.length-1;
+    while(hi-lo>1){ const mid=(lo+hi)>>1; if(resampled[mid].km<km) lo=mid; else hi=mid; }
+    const a=resampled[lo], b=resampled[hi];
+    const t=(km-a.km)/((b.km-a.km)||1);
+    return a.ele + t*(b.ele-a.ele);
+  }
+
+  // ---------- dispendio energetico per pendenza ----------
+  // In salita si spinge di più (più carboidrati necessari per unità di tempo),
+  // in discesa il dispendio è molto più basso, in piano/falsopiano è il riferimento.
+  function terrainWeight(grad){
+    if(grad>=0.06) return 1.5;   // salita ripida
+    if(grad>=0.025) return 1.3;  // salita
+    if(grad<=-0.04) return 0.45; // discesa decisa (si pedala pochissimo)
+    if(grad<=-0.015) return 0.6; // discesa leggera
+    return 1.0;                  // piano / falsopiano
+  }
+  function computeWeightedCumulative(resampled){
+    resampled[0].cumW = 0;
+    for(let i=1;i<resampled.length;i++){
+      const dH = resampled[i].cumH - resampled[i-1].cumH;
+      const grad = ((resampled[i].grad||0)+(resampled[i-1].grad||0))/2;
+      resampled[i].cumW = resampled[i-1].cumW + dH*terrainWeight(grad);
+    }
+  }
+  function weightedAtKm(resampled, km){
+    if(km<=resampled[0].km) return resampled[0].cumW;
+    if(km>=resampled[resampled.length-1].km) return resampled[resampled.length-1].cumW;
+    let lo=0, hi=resampled.length-1;
+    while(hi-lo>1){ const mid=(lo+hi)>>1; if(resampled[mid].km<km) lo=mid; else hi=mid; }
+    const a=resampled[lo], b=resampled[hi];
+    const t=(km-a.km)/((b.km-a.km)||1);
+    return a.cumW + t*(b.cumW-a.cumW);
+  }
+
+  // ---------- event generation ----------
+  function suggestTargetGH(totalH){
+    if(totalH<=1) return 40;
+    if(totalH<=2.5) return 65;
+    if(totalH<=4) return 80;
+    return 90;
+  }
+  function autoLabel(ev){
+    const name = itemName(ev);
+    if(ev.role==='preclimb'){
+      const climb = state.climbs.find(c=>c.id===ev.climbId);
+      return name+' – tratto pianeggiante prima di '+(climb?climb.name:'salita');
+    }
+    if(ev.climbId){
+      const climb = state.climbs.find(c=>c.id===ev.climbId);
+      const cname = climb ? climb.name : '';
+      const roleText = ev.role==='base'?'base':ev.role==='mid'?'metà':ev.role==='top'?'cima':'';
+      return (name+' – '+roleText+' '+cname).trim();
+    }
+    if(ev.role==='start') return 'Borraccia 1 di partenza (acqua + carbo)';
+    if(ev.role==='refill2') return 'Passa alla borraccia 2 (acqua + carbo)';
+    if(ev.role==='ristoro') return 'RISTORO – ricarica borraccia con carboidrati';
+    if(ev.role==='refill') return 'Ricarica borraccia (solo acqua)';
+    if(ev.role==='flat') return name+' – rifornimento tratto pianeggiante';
+    if(ev.role==='minbar') return name+' – integrazione lungo il percorso';
+    if(ev.role==='balance') return name+' – integrazione extra (bilanciamento)';
+    return ev.label || 'Punto di integrazione';
+  }
+  function generateEvents(){
+    const resampled = state.resampled;
+    const totalKm = state.totalKm;
+    const totalH = resampled[resampled.length-1].cumH;
+    const inputs = state.inputs;
+    const events=[]; let idc=1;
+    const newId=()=>'e'+(idc++);
+
+    // Distanza minima tra due rifornimenti solidi/gel: non è un valore fisso, ma
+    // deriva dal ritmo di assunzione. Un gel medio con target 90 g/h "copre" una
+    // certa finestra: prenderne un altro dopo pochi minuti significa accavallare
+    // due dosi. Si tiene l'80% di quella copertura, con un minimo di 20 minuti.
+    const gelProds = productsOfKind('gel');
+    const avgGel = gelProds.length ? gelProds.reduce((s,p)=>s+p.grams,0)/gelProds.length : 30;
+    const gelCoverH = inputs.targetGH>0 ? (avgGel/inputs.targetGH) : (25/60);
+    const MIN_GAP_H = Math.max(20/60, 0.8*gelCoverH);
+
+    // aggiunge un gel/barretta di un prodotto specifico
+    function tryAdd(km, product, role, climbId, force){
+      if(!product) return null;
+      km = clamp(km, 0, totalKm);
+      if(!force){
+        const t = timeAtKm(resampled, km);
+        const tooClose = events.some(e=>(e.type==='gel'||e.type==='bar') && Math.abs(timeAtKm(resampled,e.km)-t) < MIN_GAP_H);
+        if(tooClose) return null;
+      }
+      const ev = {id:newId(), km, type:product.kind, productId:product.id, grams:product.grams,
+                  role, climbId:climbId||null, labelAuto:true};
+      ev.label = autoLabel(ev);
+      events.push(ev);
+      return ev;
+    }
+    function addBottle(km, role, grams, ml){
+      const ev = {id:newId(), km:clamp(km,0,totalKm), type:'bottle', productId:null,
+                  grams:grams, ml:ml, role:role, climbId:null, labelAuto:true};
+      ev.label = autoLabel(ev);
+      events.push(ev);
+      return ev;
+    }
+
+    // 1. le borracce che riempi tu alla partenza (1 o 2, con la loro capacità e i loro
+    // carboidrati) si consumano in sequenza secondo il fabbisogno di idratazione; le
+    // ricariche successive, una volta finite, sono sempre di sola acqua.
+    const isMountainous = totalKm>0 && (state.totalElevGainAll/totalKm) > 15;
+    const waterRate = isMountainous ? 650 : 600; // ml/h
+    state.waterRate = waterRate;
+    const bottleCount = inputs.bottleCount===2 ? 2 : 1;
+
+    addBottle(0, 'start', inputs.bottle1Carbs, inputs.bottle1Ml);
+    let cursorH = inputs.bottle1Ml / waterRate;
+
+    if(bottleCount===2){
+      addBottle(kmAtTime(resampled, Math.min(cursorH, totalH)), 'refill2', inputs.bottle2Carbs, inputs.bottle2Ml);
+      cursorH += inputs.bottle2Ml / waterRate;
+    }
+
+    const refillMl = bottleCount===2 ? (inputs.bottle1Ml+inputs.bottle2Ml)/2 : inputs.bottle1Ml;
+    const intervalH = refillMl / waterRate;
+    for(let t=cursorH+intervalH; t<totalH-0.08; t+=intervalH){
+      addBottle(kmAtTime(resampled,t), 'refill', 0, refillMl);
+    }
+
+    // 1b. il ristoro è l'unico punto in cui si può ricaricare la borraccia con i
+    // carboidrati: va messo al km esatto indicato. Se lì vicino era già prevista una
+    // ricarica d'acqua, la assorbe invece di generare due soste ravvicinate.
+    if(inputs.ristoro && inputs.ristoroKm>0 && inputs.ristoroKm<totalKm){
+      const rk = clamp(inputs.ristoroKm, 0, totalKm);
+      const rt = timeAtKm(resampled, rk);
+      let absorbed = null, bestDt = Infinity;
+      events.filter(e=>e.role==='refill').forEach(e=>{
+        const dt = Math.abs(timeAtKm(resampled,e.km)-rt);
+        if(dt<bestDt){ bestDt=dt; absorbed=e; }
+      });
+      if(absorbed && bestDt < intervalH*0.6){
+        absorbed.km = rk;
+        absorbed.role = 'ristoro';
+        absorbed.grams = inputs.ristoroCarbs;
+        absorbed.labelAuto = true;
+        absorbed.label = autoLabel(absorbed);
+      } else {
+        addBottle(rk, 'ristoro', inputs.ristoroCarbs, refillMl);
+      }
+      events.sort((a,b)=>a.km-b.km);
+    }
+
+    // 2. gel e barrette legati alle salite.
+    // Alla base e a metà salita va il gel più carico che hai in tasca: è lì che il
+    // fabbisogno è massimo. La barretta in cima non è automatica: solo se la salita
+    // "vale" un secondo rifornimento in termini di tempo reale, e solo nella prima
+    // parte del percorso — più avanti si preferisce un gel, più semplice da assumere
+    // quando la fatica accumulata rende meno gradita la barretta.
+    const strongGel = strongestOf('gel');
+    const anyBar = strongestOf('bar');
+    state.climbs.forEach(c=>{
+      if(c.lengthKm>=0.8 || c.elevGain>=40){
+        tryAdd(Math.max(0,c.startKm-0.15), strongGel, 'base', c.id, false);
+      }
+      if(c.lengthKm>=5 || c.elevGain>=250){
+        tryAdd((c.startKm+c.endKm)/2, strongGel, 'mid', c.id, false);
+      }
+      const climbDurationH = timeAtKm(resampled,c.endKm) - timeAtKm(resampled,c.startKm);
+      const worthSecondStop = (c.lengthKm>=1.2 || c.elevGain>=60) && climbDurationH>=10/60;
+      if(worthSecondStop){
+        const topKm = Math.min(totalKm,c.endKm+0.1);
+        const preferBar = c.startKm <= totalKm*0.6;
+        tryAdd(topKm, preferBar ? (anyBar||strongGel) : (nearestOf('gel', inputs.targetGH*0.75)||strongGel), 'top', c.id, false);
+      }
+    });
+
+    // 3. tratti lunghi di piano / falsopiano: un rifornimento ogni ~55 minuti, con
+    // il gel la cui grammatura si avvicina di più a quello che serve in quel tempo.
+    const flatGel = nearestOf('gel', inputs.targetGH*(55/60)) || strongGel;
+    state.segments3.filter(s=>s.cls==='flat' && s.lengthKm>=12).forEach(s=>{
+      const startT=timeAtKm(resampled,s.startKm), endT=timeAtKm(resampled,s.endKm);
+      const within = events.filter(e=>e.km>=s.startKm && e.km<=s.endKm)
+        .map(e=>({t:timeAtKm(resampled,e.km)})).sort((a,b)=>a.t-b.t);
+      const checkpoints = within.concat([{t:endT}]);
+      let cursorT = startT;
+      checkpoints.forEach(cp=>{
+        while(cp.t-cursorT > 55/60){
+          cursorT += 55/60;
+          tryAdd(kmAtTime(resampled,cursorT), flatGel, 'flat', null, false);
+        }
+        cursorT = Math.max(cursorT, cp.t);
+      });
+    });
+
+    events.sort((a,b)=>a.km-b.km);
+
+    // 4. bilanciamento vs target g/h — prima si taglia l'eventuale eccesso, poi si
+    // compensa il fabbisogno mancante. Le soglie sono strette apposta: l'obiettivo è
+    // restare vicini al target impostato, non solo evitare gli eccessi grossolani.
+    const target = inputs.targetGH*totalH;
+    const delivered = ()=> events.reduce((s,e)=>s+e.grams,0);
+
+    // Su percorsi lunghi qualche barretta va difesa dal taglio: mangiare solo gel per
+    // 5-6 ore stanca il palato e lo stomaco. Ne proteggo una ogni ~2h30 di percorrenza
+    // (max 3), tenendo le più precoci — la barretta si digerisce meglio a inizio giro.
+    const desiredBars = (totalKm>50 && anyBar) ? clamp(Math.round(totalH/2.5), 1, 3) : 0;
+    function protectedBarIds(){
+      return events.filter(e=>e.type==='bar').sort((a,b)=>a.km-b.km)
+        .slice(0, desiredBars).map(e=>e.id);
+    }
+
+    // 4a. prima di togliere un punto, provo a "declassarlo": se un gel da 40g diventa
+    // un gel da 25g il piano rientra senza perdere un rifornimento. Togliere una sosta
+    // è sempre peggio che alleggerirla.
+    let guardDown = 0;
+    while(delivered() > target*1.10 && guardDown < 20){
+      guardDown++;
+      let best=null;
+      events.filter(e=>e.type==='gel'||e.type==='bar').forEach(e=>{
+        state.products.forEach(p=>{
+          if(p.grams >= e.grams) return;
+          const err = Math.abs((delivered()-e.grams+p.grams)-target);
+          if(!best || err<best.err) best={e,p,err};
+        });
+      });
+      if(!best || best.err >= Math.abs(delivered()-target)) break;
+      best.e.type = best.p.kind;
+      best.e.productId = best.p.id;
+      best.e.grams = best.p.grams;
+      if(best.e.labelAuto) best.e.label = autoLabel(best.e);
+    }
+
+    if(delivered() > target*1.10){
+      // se anche alleggerendo si resta sopra, si taglia: prima le barrette eccedenti
+      // la quota protetta, poi i gel "di riempimento" (piano, poi metà salita).
+      // Base salita e borraccia di partenza restano intoccate.
+      let guard = 0;
+      while(delivered() > target*1.10 && guard < 25){
+        guard++;
+        const keep = protectedBarIds();
+        let candidates = events.filter(e=>e.type==='bar' && keep.indexOf(e.id)<0);
+        if(candidates.length===0) candidates = events.filter(e=>e.role==='flat');
+        if(candidates.length===0) candidates = events.filter(e=>e.role==='mid');
+        if(candidates.length===0) candidates = events.filter(e=>e.role==='top' && keep.indexOf(e.id)<0);
+        if(candidates.length===0) candidates = events.filter(e=>e.type==='bar' && keep.indexOf(e.id)>=0).slice(1);
+        if(candidates.length===0) break;
+        let best=candidates[0], bestErr=Infinity;
+        candidates.forEach(c=>{
+          const err = Math.abs((delivered()-c.grams)-target);
+          if(err<bestErr){ bestErr=err; best=c; }
+        });
+        events.splice(events.indexOf(best),1);
+      }
+    }
+
+    // 5. compensazione: il resto del fabbisogno si colma prima "caricando" i punti già
+    // previsti (un gel base che diventa un gel da 40g), poi aggiungendone di nuovi.
+    // La posizione dei nuovi punti non è il vuoto più grande in senso cronologico, ma
+    // il punto dove il fabbisogno reale (pesato per pendenza) è più indietro rispetto
+    // a quanto già consegnato.
+    let guardUp = 0;
+    while(delivered() < target*0.95 && guardUp < 20){
+      guardUp++;
+      let best=null;
+      events.filter(e=>e.type==='gel'||e.type==='bar').forEach(e=>{
+        state.products.forEach(p=>{
+          if(p.grams <= e.grams) return;
+          if(p.kind!==e.type) return; // non trasformo un gel in barretta per fare grammi
+          const err = Math.abs((delivered()-e.grams+p.grams)-target);
+          if(!best || err<best.err) best={e,p,err};
+        });
+      });
+      if(!best || best.err >= Math.abs(delivered()-target)) break;
+      best.e.productId = best.p.id;
+      best.e.grams = best.p.grams;
+      if(best.e.labelAuto) best.e.label = autoLabel(best.e);
+    }
+
+    const totalW = resampled[resampled.length-1].cumW || 1;
+    const gramsPerW = target / totalW;
+    function idealDeliveredAtKm(km){ return gramsPerW * weightedAtKm(resampled, km); }
+    function deliveredUpToKm(km){
+      let s=0; for(const e of events) if(e.km<=km) s+=e.grams; return s;
+    }
+    function bestDeficitKm(minGapH){
+      // La distanza minima vale solo fra gel e barrette: bere alla borraccia non
+      // "occupa" lo stomaco come una dose solida.
+      const times=[0].concat(
+        events.filter(e=>e.type==='gel'||e.type==='bar').map(e=>timeAtKm(resampled,e.km))
+      ).concat([totalH]).sort((a,b)=>a-b);
+      const eps = Math.max(1/3600, minGapH*0.01);
+      const gaps=[];
+      for(let i=1;i<times.length;i++){
+        const size = times[i]-times[i-1];
+        if(size < minGapH*2 + eps*2) continue;
+        gaps.push({start:times[i-1]+eps, end:times[i]-eps, size});
+      }
+      if(gaps.length===0) return null;
+      let bestKm=null, bestDeficit=-Infinity;
+      gaps.forEach(g=>{
+        const lo=g.start+minGapH, hi=g.end-minGapH;
+        const steps=Math.max(1, Math.round((hi-lo)/(2/60)));
+        for(let s=0;s<=steps;s++){
+          const t = lo + (hi-lo)*(s/steps);
+          const km = kmAtTime(resampled, t);
+          const deficit = idealDeliveredAtKm(km) - deliveredUpToKm(km);
+          if(deficit>bestDeficit){ bestDeficit=deficit; bestKm=km; }
+        }
+      });
+      return bestKm;
+    }
+    let guardAdd=0;
+    while(delivered() < target*0.95 && guardAdd<15){
+      guardAdd++;
+      const deficit = target - delivered();
+      // il prodotto che avvicina di più al fabbisogno residuo, qualunque sia il tipo
+      const ranked = state.products.filter(p=>p.grams>0)
+        .slice().sort((a,b)=>Math.abs(deficit-a.grams)-Math.abs(deficit-b.grams));
+      if(ranked.length===0) break;
+      let added=null;
+      for(const p of ranked){
+        const km = bestDeficitKm(MIN_GAP_H);
+        if(km===null) break;
+        added = tryAdd(km, p, 'balance', null, false);
+        if(added) break;
+      }
+      if(!added) break;
+      events.sort((a,b)=>a.km-b.km);
+    }
+
+    // 6. su percorsi lunghi servono una o più barrette: se ne mancano, le reintegro
+    // una alla volta, in cima alle salite più impegnative della prima parte; se quel
+    // punto è troppo vicino a un altro rifornimento, provo nel tratto pianeggiante
+    // subito prima della salita.
+    if(desiredBars>0 && anyBar){
+      const climbsByGain = state.climbs.slice().sort((a,b)=> b.elevGain-a.elevGain);
+      let guardBar = 0;
+      while(events.filter(e=>e.type==='bar').length < desiredBars && guardBar < 6){
+        guardBar++;
+        let placed = null;
+        for(const c of climbsByGain){
+          const alreadyBar = events.some(e=>e.type==='bar' && e.climbId===c.id);
+          if(alreadyBar) continue;
+          placed = tryAdd(Math.min(totalKm, c.endKm+0.1), anyBar, 'top', c.id, false);
+          if(!placed){
+            const preClimbT = Math.max(0, timeAtKm(resampled, c.startKm) - MIN_GAP_H*1.5);
+            placed = tryAdd(kmAtTime(resampled, preClimbT), anyBar, 'preclimb', c.id, false);
+          }
+          if(placed) break;
+        }
+        if(!placed){
+          const km = bestDeficitKm(MIN_GAP_H);
+          placed = km!==null ? tryAdd(km, anyBar, 'minbar', null, false) : null;
+        }
+        if(!placed) break;
+        events.sort((a,b)=>a.km-b.km);
+      }
+
+      // Se il percorso è troppo fitto per aggiungere un punto senza accavallarlo,
+      // la barretta non si aggiunge: si sostituisce a un gel già previsto.
+      const rank = ev => {
+        if(ev.role==='top') return 0;
+        if(ev.role==='flat' || ev.role==='balance') return 1;
+        if(ev.role==='mid') return 2;
+        return 3; // 'base': ultima scelta, è l'indicazione tecnicamente più solida
+      };
+      let guardConv = 0;
+      while(events.filter(e=>e.type==='bar').length < desiredBars && guardConv < 6){
+        guardConv++;
+        const candidates = events.filter(e=>e.type==='gel' && e.km <= totalKm*0.65);
+        if(candidates.length===0) break;
+        candidates.sort((a,b)=> (rank(a)-rank(b)) || (a.km-b.km));
+        const conv = candidates[0];
+        conv.type = 'bar';
+        conv.productId = anyBar.id;
+        conv.grams = anyBar.grams;
+        if(conv.labelAuto) conv.label = autoLabel(conv);
+      }
+    }
+
+    state.events = events;
+  }
+  function largestGapMidpointKm(){
+    const resampled = state.resampled;
+    const totalH = resampled[resampled.length-1].cumH;
+    const times=[0].concat(state.events.map(e=>timeAtKm(resampled,e.km))).concat([totalH]).sort((a,b)=>a-b);
+    let maxGap=0, gapStart=0;
+    for(let i=1;i<times.length;i++){ const g=times[i]-times[i-1]; if(g>maxGap){maxGap=g; gapStart=times[i-1];} }
+    return kmAtTime(resampled, gapStart+maxGap/2);
+  }
+
+  // le borracce con carboidrati non sono una dose secca: coprono un tratto, finché
+  // non si svuotano o finché non se ne apre un'altra. Serve per la fascia continua
+  // disegnata sull'asse X del profilo.
+  function carbBands(){
+    const resampled = state.resampled;
+    if(!resampled) return [];
+    const totalH = resampled[resampled.length-1].cumH;
+    const bottles = state.events.filter(e=>e.type==='bottle').slice().sort((a,b)=>a.km-b.km);
+    const rate = state.waterRate || 600;
+    const bands=[];
+    bottles.forEach((e,i)=>{
+      if(!(e.grams>0)) return;
+      const t0 = timeAtKm(resampled, e.km);
+      let t1 = t0 + ((e.ml||500)/rate);
+      const next = bottles[i+1];
+      if(next) t1 = Math.min(t1, timeAtKm(resampled, next.km));
+      t1 = Math.min(t1, totalH);
+      if(t1<=t0) return;
+      bands.push({ km0:e.km, km1:kmAtTime(resampled,t1), grams:e.grams, minutes:(t1-t0)*60, label:e.label });
+    });
+    return bands;
+  }
+
+  // ---------- chart rendering ----------
+  function visibleEvents(){
+    if(!state.inputs.hideWater) return state.events;
+    return state.events.filter(e=>!(e.type==='bottle' && !(e.grams>0)));
+  }
+  function buildChartSVG(){
+    const resampled = state.resampled;
+    const totalKm = state.totalKm;
+    let minEle=Infinity, maxEle=-Infinity;
+    resampled.forEach(p=>{ if(p.ele<minEle)minEle=p.ele; if(p.ele>maxEle)maxEle=p.ele; });
+    if(maxEle-minEle<50){ const mid=(maxEle+minEle)/2; minEle=mid-25; maxEle=mid+25; }
+    const pad=(maxEle-minEle)*0.08; minEle-=pad; maxEle+=pad;
+
+    const W=1000,H=420, ML=44, MR=16, MT=64, MB=86;
+    const PW=W-ML-MR, PH=H-MT-MB;
+    const x = km => ML + (totalKm>0 ? (km/totalKm)*PW : 0);
+    const y = ele => MT + PH - ((ele-minEle)/(maxEle-minEle))*PH;
+    const baseline = MT+PH;
+    const bandY = baseline+24, bandH = 9;
+    const markerY = baseline+52;
+
+    let svg = '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Profilo altimetrico del percorso con i punti di rifornimento">';
+
+    const eleStep = niceStep(maxEle-minEle);
+    for(let e=Math.ceil(minEle/eleStep)*eleStep; e<=maxEle; e+=eleStep){
+      svg += '<line x1="'+ML+'" y1="'+y(e)+'" x2="'+(W-MR)+'" y2="'+y(e)+'" stroke="#C9CEBD" stroke-width="1" opacity="0.6"/>';
+      svg += '<text x="'+(ML-6)+'" y="'+(y(e)+3)+'" font-family="IBM Plex Mono,monospace" font-size="9" fill="#4B5147" text-anchor="end">'+Math.round(e)+'</text>';
+    }
+
+    const bandSegs = mergeSegments(resampled, classifyBin, 0.05);
+    bandSegs.forEach(seg=>{
+      let pts = x(resampled[seg.startIdx].km)+','+baseline+' ';
+      for(let i=seg.startIdx;i<=seg.endIdx;i++) pts += x(resampled[i].km)+','+y(resampled[i].ele)+' ';
+      pts += x(resampled[seg.endIdx].km)+','+baseline;
+      svg += '<polygon points="'+pts+'" fill="'+BIN_COLORS[seg.cls]+'" stroke="none"/>';
+    });
+
+    let pathD = 'M '+x(resampled[0].km)+' '+y(resampled[0].ele)+' ';
+    for(let i=1;i<resampled.length;i++) pathD += 'L '+x(resampled[i].km)+' '+y(resampled[i].ele)+' ';
+    svg += '<path d="'+pathD+'" fill="none" stroke="#171B14" stroke-width="1.6" stroke-linejoin="round"/>';
+    svg += '<line x1="'+ML+'" y1="'+baseline+'" x2="'+(W-MR)+'" y2="'+baseline+'" stroke="#171B14" stroke-width="1.4"/>';
+
+    // un riferimento ogni 10 km: sul lungo resta leggibile, sul corto non sparisce
+    const kmStep = 10;
+    for(let k=0;k<=totalKm+0.001;k+=kmStep){
+      svg += '<line x1="'+x(k)+'" y1="'+baseline+'" x2="'+x(k)+'" y2="'+(baseline+5)+'" stroke="#171B14" stroke-width="1"/>';
+      svg += '<text x="'+x(k)+'" y="'+(baseline+17)+'" font-family="IBM Plex Mono,monospace" font-size="9" fill="#171B14" text-anchor="middle">'+Math.round(k)+'</text>';
+    }
+
+    // fascia di continuità: dove i carboidrati arrivano dalla borraccia, quindi in
+    // modo continuo e non a dosi singole. I buchi mostrano dove l'apporto si ferma.
+    svg += '<rect x="'+ML+'" y="'+bandY+'" width="'+PW+'" height="'+bandH+'" fill="#EFF1EA" stroke="#C9CEBD" stroke-width="0.8" rx="2"/>';
+    const bands = carbBands();
+    bands.forEach(b=>{
+      const bx = x(b.km0), bw = Math.max(2, x(b.km1)-x(b.km0));
+      const tip = 'Borraccia con '+b.grams+' g di carbo — copre dal km '+b.km0.toFixed(1)+' al km '+b.km1.toFixed(1)+' (~'+Math.round(b.minutes)+' min)';
+      svg += '<rect x="'+bx+'" y="'+bandY+'" width="'+bw+'" height="'+bandH+'" fill="'+MARKER_COLORS.bottleCarb+'" rx="2" opacity="0.88"><title>'+escapeXML(tip)+'</title></rect>';
+    });
+    svg += '<text x="'+(ML-6)+'" y="'+(bandY+bandH-1)+'" font-family="IBM Plex Mono,monospace" font-size="8" fill="#4B5147" text-anchor="end">CHO</text>';
+
+    state.climbs.forEach(c=>{
+      if(c.lengthKm>=1.0){
+        const midKm=(c.startKm+c.endKm)/2;
+        const label = escapeXML(c.name)+' · '+(c.avgGrad*100).toFixed(1)+'%';
+        svg += '<text x="'+x(midKm)+'" y="'+(MT-36)+'" font-family="Oswald,sans-serif" font-size="10" font-weight="600" fill="#171B14" text-anchor="middle">'+label+'</text>';
+      }
+    });
+
+    // il ristoro sta sopra il profilo: è l'unico punto della gara in cui ti fermi
+    // davvero, e va visto prima di tutto il resto.
+    state.events.filter(e=>e.role==='ristoro').forEach(ev=>{
+      const rx = x(ev.km);
+      const ry = MT-14;
+      const eleY = y(eleAtKm(resampled, ev.km));
+      const tip = 'RISTORO al km '+ev.km.toFixed(1)+' — ricarica borraccia con '+ev.grams+' g di carbo';
+      svg += '<line x1="'+rx+'" y1="'+(ry+9)+'" x2="'+rx+'" y2="'+eleY+'" stroke="'+MARKER_COLORS.ristoro+'" stroke-width="1.2" stroke-dasharray="3,3" opacity="0.75"/>';
+      svg += '<circle cx="'+rx+'" cy="'+ry+'" r="10" fill="'+MARKER_COLORS.ristoro+'" stroke="#FFFFFF" stroke-width="1.6" data-event-id="'+ev.id+'" class="chart-marker" style="cursor:pointer"><title>'+escapeXML(tip)+'</title></circle>';
+      svg += '<text x="'+rx+'" y="'+(ry+4)+'" font-size="10.5" font-family="Oswald,sans-serif" font-weight="700" fill="#FFFFFF" text-anchor="middle" style="pointer-events:none">R</text>';
+    });
+
+    let lastX=-999;
+    visibleEvents().slice().sort((a,b)=>a.km-b.km).forEach(ev=>{
+      // il ristoro ha già la sua R sopra il profilo; se però lì ricarichi la borraccia
+      // con i carboidrati, la C va comunque in fila con gli altri rifornimenti — è
+      // quella riga che racconta cosa entra nello stomaco e quando.
+      if(ev.role==='ristoro' && !(ev.grams>0)) return;
+      let mx = x(ev.km);
+      if(mx-lastX<16) mx = lastX+16;
+      lastX = mx;
+      const my = markerY;
+      const color = ev.type==='bottle' ? (ev.grams>0?MARKER_COLORS.bottleCarb:MARKER_COLORS.bottleWater) : MARKER_COLORS[ev.type];
+      const letter = ev.type==='gel'?'G':ev.type==='bar'?'B':(ev.grams>0?'C':'A');
+      const eleY = y(eleAtKm(resampled, ev.km));
+      const tooltip = escapeXML(ev.label)+' — km '+ev.km.toFixed(1)+' — '+ev.grams+' g CHO';
+      svg += '<line x1="'+x(ev.km)+'" y1="'+eleY+'" x2="'+mx+'" y2="'+(my-9)+'" stroke="'+color+'" stroke-width="1" stroke-dasharray="2,2" opacity="0.55"/>';
+      svg += '<circle cx="'+mx+'" cy="'+my+'" r="9" fill="'+color+'" stroke="#FFFFFF" stroke-width="1.5" data-event-id="'+ev.id+'" class="chart-marker" style="cursor:pointer"><title>'+tooltip+'</title></circle>';
+      svg += '<text x="'+mx+'" y="'+(my+3.5)+'" font-size="9" font-family="IBM Plex Mono,monospace" fill="#FFFFFF" text-anchor="middle" style="pointer-events:none">'+letter+'</text>';
+    });
+
+    svg += '</svg>';
+    return svg;
+  }
+  function renderChartOnly(){
+    document.getElementById('chart-wrap').innerHTML = buildChartSVG();
+  }
+
+  // ---------- table rendering ----------
+  function eventRowHTML(ev){
+    const opts = state.products.map(p=>
+      '<option value="p:'+p.id+'"'+(ev.productId===p.id?' selected':'')+'>'+escapeXML(p.name)+' · '+p.grams+'g</option>'
+    ).join('');
+    return '<tr data-id="'+ev.id+'" id="event-row-'+ev.id+'">'
+      + '<td><input type="number" step="0.1" class="cell-km" data-field="km" value="'+ev.km.toFixed(1)+'"></td>'
+      + '<td class="time-cell">'+formatTime(timeAtKm(state.resampled, ev.km))+'</td>'
+      + '<td><select class="cell-type" data-field="type">'
+      +   opts
+      +   '<option value="bottle"'+(ev.type==='bottle'?' selected':'')+'>Borraccia</option>'
+      + '</select></td>'
+      + '<td><input type="number" class="cell-grams" data-field="grams" value="'+ev.grams+'"></td>'
+      + '<td><input type="text" class="cell-label" data-field="label" value="'+escapeXML(ev.label)+'"></td>'
+      + '<td><button class="btn-del" data-action="delete" aria-label="Elimina punto">&times;</button></td>'
+      + '</tr>';
+  }
+  function renderTable(){
+    const tbody = document.getElementById('events-tbody');
+    tbody.innerHTML = visibleEvents().map(eventRowHTML).join('');
+  }
+
+  // ---------- products rendering ----------
+  function productRowHTML(p){
+    return '<div class="product-row" data-id="'+p.id+'">'
+      + '<input type="text" class="p-name" data-field="name" value="'+escapeXML(p.name)+'" aria-label="Nome prodotto">'
+      + '<select class="p-kind" data-field="kind" aria-label="Tipo">'
+      +   '<option value="gel"'+(p.kind==='gel'?' selected':'')+'>Gel</option>'
+      +   '<option value="bar"'+(p.kind==='bar'?' selected':'')+'>Barretta</option>'
+      + '</select>'
+      + '<input type="number" class="p-grams" data-field="grams" min="0" max="120" step="1" value="'+p.grams+'" aria-label="Grammi di carboidrati">'
+      + '<span class="p-unit">g CHO</span>'
+      + '<button class="btn-del" data-action="del-product" aria-label="Elimina prodotto">&times;</button>'
+      + '</div>';
+  }
+  function renderProducts(){
+    document.getElementById('products-list').innerHTML = state.products.map(productRowHTML).join('');
+    document.getElementById('btn-add-product').style.display = state.products.length>=5 ? 'none' : '';
+  }
+
+  // ---------- climbs rendering ----------
+  function climbRowHTML(c){
+    const catText = c.category ? (' · '+c.category) : '';
+    return '<div class="climb-item" data-id="'+c.id+'">'
+      + '<input type="text" class="climb-name" data-field="name" value="'+escapeXML(c.name)+'">'
+      + '<span class="climb-stats">'+c.lengthKm.toFixed(1)+' km · '+Math.round(c.elevGain)+' m D+ · '+(c.avgGrad*100).toFixed(1)+'% media'+catText+'</span>'
+      + '</div>';
+  }
+  function renderClimbsList(){
+    const container = document.getElementById('climbs-list');
+    if(state.climbs.length===0){
+      container.innerHTML = '<p class="empty-note">Nessuna salita significativa rilevata su questo percorso.</p>';
+      return;
+    }
+    container.innerHTML = state.climbs.map(climbRowHTML).join('');
+  }
+
+  // ---------- alternative suggerite ----------
+  // Il piano generato è una proposta, non un dogma: qui elenco gli scambi che, da
+  // direttore sportivo, valuterei io stesso guardando il road book finito. Con più
+  // grammature in tasca lo scambio non è più solo "gel o barretta": spesso basta
+  // cambiare la grammatura del gel per rientrare nel target senza saltare una sosta.
+  function buildAlternatives(){
+    const resampled = state.resampled;
+    if(!resampled || state.events.length===0) return [];
+    const totalH = resampled[resampled.length-1].cumH;
+    if(totalH<=0) return [];
+    const i = state.inputs;
+    const total = state.events.reduce((s,e)=>s+e.grams,0);
+    const gh = total/totalH;
+    const targetGrams = i.targetGH*totalH;
+    const rate = g => (g/totalH).toFixed(0);
+    const out = [];
+    const items = state.events.filter(e=>e.type==='gel'||e.type==='bar');
+    if(items.length===0) return [];
+
+    function bestSwap(filterFn){
+      let best=null;
+      items.forEach(e=>{
+        state.products.forEach(p=>{
+          if(p.id===e.productId) return;
+          if(!filterFn(e,p)) return;
+          const err = Math.abs((total-e.grams+p.grams)-targetGrams);
+          if(!best || err<best.err) best={e,p,err,newTotal:total-e.grams+p.grams};
+        });
+      });
+      return best;
+    }
+
+    // 1. scostamento dal target: si corregge cambiando la grammatura di un punto,
+    // non togliendolo.
+    if(gh > i.targetGH*1.06){
+      const s = bestSwap((e,p)=>p.grams<e.grams);
+      if(s){
+        out.push('<b>km '+s.e.km.toFixed(1)+'</b> — il piano viaggia a '+gh.toFixed(0)+' g/h contro un target di '
+          +i.targetGH+'. Qui puoi passare da <b>'+escapeXML(itemName(s.e))+' ('+s.e.grams+'g)</b> a <b>'
+          +escapeXML(s.p.name)+' ('+s.p.grams+'g)</b>: stessa sosta, piano a '+rate(s.newTotal)+' g/h.');
+      } else {
+        // niente di più leggero in tasca: il peso sta nella parte fissa, cioè in borraccia
+        const fixed = state.events.filter(e=>e.type==='bottle').reduce((s2,e)=>s2+e.grams,0);
+        const quota = total>0 ? Math.round(fixed/total*100) : 0;
+        out.push('Il piano viaggia a '+gh.toFixed(0)+' g/h contro un target di '+i.targetGH
+          +' e in tasca non hai nulla di più leggero da mettere al posto di un gel. Le borracce da sole portano <b>'
+          +Math.round(fixed)+' g</b> ('+quota+'% del totale): su un percorso corto come questo è lì che conviene '
+          +'scendere con la polvere, non togliere una sosta.');
+      }
+    } else if(gh < i.targetGH*0.94){
+      const s = bestSwap((e,p)=>p.grams>e.grams);
+      if(s){
+        out.push('<b>km '+s.e.km.toFixed(1)+'</b> — il piano si ferma a '+gh.toFixed(0)+' g/h contro un target di '
+          +i.targetGH+'. Invece di aggiungere una sosta, qui puoi caricare: da <b>'+escapeXML(itemName(s.e))+' ('+s.e.grams+'g)</b> a <b>'
+          +escapeXML(s.p.name)+' ('+s.p.grams+'g)</b>, piano a '+rate(s.newTotal)+' g/h.');
+      } else {
+        out.push('Il piano si ferma a '+gh.toFixed(0)+' g/h contro un target di '+i.targetGH
+          +': il percorso non lascia spazi abbastanza ampi per altri rifornimenti senza accavallarli, e in tasca '
+          +'non hai nulla di più carico. Se vuoi avvicinarti al target, alza i grammi di carboidrati in borraccia.');
+      }
+    }
+
+    // 2. gel sostituibili con barretta nella prima parte del percorso, dove si mastica
+    // volentieri. Il confronto è tra le grammature reali dei due prodotti.
+    const bars = state.products.filter(p=>p.kind==='bar' && p.grams>0);
+    if(bars.length>0){
+      items.filter(e=>e.type==='gel' && (e.role==='top'||e.role==='flat'||e.role==='balance'||e.role==='mid') && e.km <= state.totalKm*0.65)
+        .sort((a,b)=>a.km-b.km).slice(0,2)
+        .forEach(e=>{
+          const b = bars.slice().sort((x,z)=>Math.abs(x.grams-e.grams)-Math.abs(z.grams-e.grams))[0];
+          const newTotal = total-e.grams+b.grams;
+          const diff = b.grams===e.grams
+            ? 'stessi grammi, piano invariato a '+rate(total)+' g/h'
+            : b.grams+'g invece di '+e.grams+'g, piano a '+rate(newTotal)+' g/h';
+          out.push('<b>km '+e.km.toFixed(1)+'</b> — qui puoi mettere <b>'+escapeXML(b.name)+'</b> al posto di <b>'
+            +escapeXML(itemName(e))+'</b> ('+diff+'): sei in un punto dove si mastica bene e spezzi la monotonia dei gel.');
+        });
+    }
+
+    // 3. barrette che cadono troppo avanti nel percorso: a stomaco affaticato è più
+    // facile mandare giù un gel, scegliendo la grammatura più vicina.
+    const gels = state.products.filter(p=>p.kind==='gel' && p.grams>0);
+    if(gels.length>0){
+      items.filter(e=>e.type==='bar' && e.km > state.totalKm*0.7)
+        .sort((a,b)=>a.km-b.km).slice(0,1)
+        .forEach(e=>{
+          const g = gels.slice().sort((x,z)=>Math.abs(x.grams-e.grams)-Math.abs(z.grams-e.grams))[0];
+          const newTotal = total-e.grams+g.grams;
+          out.push('<b>km '+e.km.toFixed(1)+'</b> — questa barretta arriva nella parte finale, quando lo stomaco '
+            +'digerisce peggio i solidi: valuta <b>'+escapeXML(g.name)+' ('+g.grams+'g invece di '+e.grams+'g)</b>, piano a '
+            +rate(newTotal)+' g/h.');
+        });
+    }
+
+    return out.slice(0,4);
+  }
+  function renderAlternatives(){
+    const list = document.getElementById('alt-list');
+    const card = document.getElementById('alt-card');
+    const alts = buildAlternatives();
+    if(alts.length===0){ card.classList.add('hidden'); list.innerHTML=''; return; }
+    card.classList.remove('hidden');
+    list.innerHTML = alts.map(a=>'<li>'+a+'</li>').join('');
+  }
+
+  // ---------- summary ----------
+  function splitByProduct(evts){
+    const counts = {};
+    evts.forEach(e=>{
+      const n = itemName(e)+' '+e.grams+'g';
+      counts[n] = (counts[n]||0)+1;
+    });
+    const keys = Object.keys(counts);
+    if(keys.length===0) return '';
+    return keys.map(k=>counts[k]+'× '+k).join(' · ');
+  }
+  function renderSummaryOnly(){
+    const evts = visibleEvents();
+    const gels = evts.filter(e=>e.type==='gel');
+    const bars = evts.filter(e=>e.type==='bar');
+    const bottleEvents = evts.filter(e=>e.type==='bottle');
+    const bottleCount = bottleEvents.length;
+    const bottleCarbCount = bottleEvents.filter(e=>e.grams>0).length;
+    const bottleWaterCount = bottleCount - bottleCarbCount;
+    const totalGrams = evts.reduce((s,e)=>s+e.grams,0);
+    const totalH = state.resampled[state.resampled.length-1].cumH;
+    const avgGH = totalH>0 ? totalGrams/totalH : 0;
+    document.getElementById('sum-gel').textContent = gels.length;
+    document.getElementById('sum-bar').textContent = bars.length;
+    document.getElementById('sum-gel-split').textContent = splitByProduct(gels);
+    document.getElementById('sum-bar-split').textContent = splitByProduct(bars);
+    document.getElementById('sum-bottle').textContent = bottleCount;
+    const splitEl = document.getElementById('sum-bottle-split');
+    const carbGramsSet = Array.from(new Set(bottleEvents.filter(e=>e.grams>0).map(e=>e.grams)));
+    const carbGramsLabel = carbGramsSet.length===1 ? (carbGramsSet[0]+'g carbo') : 'carbo';
+    if(bottleCount===0) splitEl.textContent = '';
+    else if(bottleWaterCount===0) splitEl.textContent = bottleCarbCount>0 ? ('tutte con '+carbGramsLabel) : 'tutte sola acqua';
+    else splitEl.textContent = bottleCarbCount+' con '+carbGramsLabel+' · '+bottleWaterCount+' sola acqua';
+    document.getElementById('sum-total').textContent = Math.round(totalGrams)+' g';
+    document.getElementById('sum-rate').textContent = avgGH.toFixed(0)+' g/h';
+    document.getElementById('sum-target').textContent = 'target '+state.inputs.targetGH+' g/h';
+    document.getElementById('sum-time').textContent = formatTime(totalH);
+  }
+
+  // ---------- orchestration ----------
+  function showSections(){
+    ['input-card','chart-card','climbs-card','table-card','summary-card'].forEach(id=>{
+      document.getElementById(id).classList.remove('hidden');
+    });
+  }
+  function readProducts(){
+    const rows = document.querySelectorAll('#products-list .product-row');
+    rows.forEach(row=>{
+      const p = state.products.find(x=>x.id===row.dataset.id);
+      if(!p) return;
+      const nameEl = row.querySelector('[data-field="name"]');
+      const kindEl = row.querySelector('[data-field="kind"]');
+      const gramsEl = row.querySelector('[data-field="grams"]');
+      p.name = (nameEl.value||'').trim() || p.name;
+      p.kind = kindEl.value==='bar' ? 'bar' : 'gel';
+      p.grams = Math.max(0, parseFloat(gramsEl.value)||0);
+    });
+  }
+  function readInputs(){
+    readProducts();
+    state.inputs.level = document.getElementById('inp-level').value;
+    state.inputs.speed = parseFloat(document.getElementById('inp-speed').value)||24;
+    state.inputs.climbMode = document.getElementById('inp-climb-mode').value==='vam' ? 'vam' : 'wkg';
+    state.inputs.vam = parseFloat(document.getElementById('inp-vam').value)||890;
+    state.inputs.wkg = parseFloat(document.getElementById('inp-wkg').value)||3.3;
+    state.inputs.targetGH = parseFloat(document.getElementById('inp-target').value)||60;
+    state.inputs.bottleCount = parseInt(document.getElementById('inp-bottle-count').value,10)===2 ? 2 : 1;
+    state.inputs.bottle1Ml = parseFloat(document.getElementById('inp-bottle1-ml').value)||500;
+    state.inputs.bottle1Carbs = parseFloat(document.getElementById('inp-bottle1-carbs').value)||0;
+    state.inputs.bottle2Ml = parseFloat(document.getElementById('inp-bottle2-ml').value)||500;
+    state.inputs.bottle2Carbs = parseFloat(document.getElementById('inp-bottle2-carbs').value)||0;
+    state.inputs.hideWater = document.getElementById('inp-hide-water').checked;
+    state.inputs.ristoro = document.getElementById('inp-extra-recharge').checked;
+    state.inputs.ristoroKm = parseFloat(document.getElementById('inp-ristoro-km').value)||0;
+    state.inputs.ristoroCarbs = parseFloat(document.getElementById('inp-extra-recharge-carbs').value)||0;
+  }
+  function autofillTargetGH(){
+    if(!state.targetGHManual){
+      const totalH = state.resampled[state.resampled.length-1].cumH;
+      const val = suggestTargetGH(totalH);
+      state.inputs.targetGH = val;
+      document.getElementById('inp-target').value = val;
+    }
+  }
+  function syncLevelUI(){
+    const lvl = document.getElementById('inp-level').value;
+    const custom = lvl==='custom';
+    document.getElementById('custom-fields').classList.toggle('hidden', !custom);
+    document.getElementById('level-readout').classList.toggle('hidden', custom);
+    if(!custom){
+      const L = LEVELS[lvl];
+      state.inputs.level = lvl;
+      document.getElementById('lr-blurb').textContent = L.blurb;
+      const vamTxt = state.resampled
+        ? 'su questo percorso ≈ '+Math.round(vamFromWkg(L.wkg))+' m/h di VAM'
+        : 'VAM ≈ '+Math.round(L.wkg*270)+' m/h su una salita al 7%';
+      document.getElementById('lr-nums').textContent = L.wkg.toFixed(1).replace('.',',')+' W/kg in salita · '+vamTxt+' · '+L.speed+' km/h fuori salita';
+      // tengo allineati i campi personalizzati, così passando a "Personalizzato"
+      // parti dai numeri del livello invece che da valori scollegati
+      document.getElementById('inp-speed').value = L.speed;
+      document.getElementById('inp-wkg').value = L.wkg;
+      document.getElementById('inp-climb-mode').value = 'wkg';
+      syncClimbModeVisibility();
+    } else {
+      state.inputs.level = 'custom';
+      syncClimbModeVisibility();
+    }
+  }
+  function syncClimbModeVisibility(){
+    const isVam = document.getElementById('inp-climb-mode').value==='vam';
+    document.getElementById('vam-field').classList.toggle('hidden', !isVam);
+    document.getElementById('wkg-field').classList.toggle('hidden', isVam);
+    if(!isVam){
+      const w = parseFloat(document.getElementById('inp-wkg').value)||3.3;
+      document.getElementById('wkg-hint').textContent = state.resampled
+        ? 'W/kg — equivale a ~'+Math.round(vamFromWkg(w))+' m/h di VAM su questo percorso'
+        : 'W/kg sostenuti in salita';
+    }
+  }
+  function runGeneration(){
+    readInputs();
+    computeTimes(state.resampled, effectiveSpeed(), effectiveVam());
+    computeWeightedCumulative(state.resampled);
+    autofillTargetGH();
+    readInputs();
+    generateEvents();
+    renderTable();
+    renderChartOnly();
+    renderSummaryOnly(); renderAlternatives();
+    showPlanBasis();
+    syncLevelUI();
+  }
+  function showPlanBasis(){
+    const el = document.getElementById('plan-basis-line');
+    const i = state.inputs;
+    const lvlTxt = i.level==='custom'
+      ? 'Personalizzato'
+      : LEVELS[i.level].label;
+    const climbTxt = i.level==='custom' && i.climbMode==='vam'
+      ? 'VAM '+i.vam+' m/h'
+      : effectiveWkg().toFixed(1)+' W/kg (~'+Math.round(effectiveVam())+' m/h)';
+    const prodTxt = state.products.map(p=>p.name+' '+p.grams+'g').join(', ');
+    el.textContent = '✓ Piano generato · '+lvlTxt+': '+effectiveSpeed()+' km/h fuori salita · '+climbTxt
+      +' · in tasca: '+prodTxt
+      +' · '+i.bottleCount+' borracc'+(i.bottleCount===1?'ia':'e')+' ('+i.bottle1Carbs+'g'+(i.bottleCount===2?' + '+i.bottle2Carbs+'g':'')+')'
+      +(i.ristoro&&i.ristoroKm>0?' · ristoro km '+i.ristoroKm+' ('+i.ristoroCarbs+'g)':'')
+      +' · target '+i.targetGH+' g/h — '+state.events.length+' punti, '+Math.round(state.events.reduce((s,e)=>s+e.grams,0))+' g totali';
+    el.classList.remove('flash');
+    void el.offsetWidth; // riavvia l'animazione
+    el.classList.add('flash');
+  }
+  function showUploadError(msg){
+    const err = document.getElementById('dz-error');
+    err.textContent = msg;
+    err.classList.remove('hidden');
+    document.getElementById('dz-success').classList.add('hidden');
+  }
+  function showUploadSuccess(msg){
+    const ok = document.getElementById('dz-success');
+    ok.textContent = msg;
+    ok.classList.remove('hidden');
+    document.getElementById('dz-error').classList.add('hidden');
+  }
+  function onRouteLoaded(rawPts, formato){
+    const cum = buildCumulative(rawPts);
+    const totalKm = cum[cum.length-1].km;
+    const stepKm = Math.max(0.05, totalKm/1200);
+    const resampled = resample(cum, stepKm);
+    smoothElevation(resampled, stepKm, 300);
+    computeGradients(resampled, stepKm, 300);
+    const segments3 = mergeSegments(resampled, classify3, 0.4);
+    const climbs = buildClimbs(segments3);
+
+    state.resampled = resampled;
+    state.segments3 = segments3;
+    state.climbs = climbs;
+    state.totalKm = totalKm;
+    state.totalElevGainAll = totalElevGain(resampled);
+    state.targetGHManual = false;
+
+    const gain = Math.round(state.totalElevGainAll);
+    showUploadSuccess('Percorso caricato da '+formato+': '+totalKm.toFixed(1)+' km · '+gain+' m D+ · '+climbs.length+' salite rilevate');
+    document.getElementById('route-stats-line').textContent = totalKm.toFixed(1)+' km · '+gain+' m D+';
+    const rkEl = document.getElementById('inp-ristoro-km');
+    rkEl.max = totalKm.toFixed(1);
+    document.getElementById('ristoro-km-hint').textContent = 'km esatto del percorso (0–'+totalKm.toFixed(1)+')';
+
+    showSections();
+    renderClimbsList();
+    runGeneration();
+  }
+  function handleFile(file){
+    if(!file){ showUploadError('Nessun file selezionato.'); return; }
+    const name = file.name || '';
+    const ext = (name.split('.').pop()||'').toLowerCase();
+    if(['gpx','tcx','fit'].indexOf(ext)<0){
+      showUploadError('Formato non riconosciuto: servono file .gpx, .tcx o .fit.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onerror = ()=> showUploadError('Impossibile leggere il file selezionato.');
+    reader.onload = ()=>{
+      try{
+        let pts;
+        if(ext==='fit') pts = parseFITBuffer(reader.result);
+        else if(ext==='tcx') pts = parseTCXText(reader.result);
+        else pts = parseGPXText(reader.result);
+        onRouteLoaded(pts, ext.toUpperCase());
+      } catch(err){
+        showUploadError(err.message || 'Errore nella lettura del file.');
+      }
+    };
+    if(ext==='fit') reader.readAsArrayBuffer(file);
+    else reader.readAsText(file);
+  }
+
+  // ---------- wiring ----------
+  document.addEventListener('DOMContentLoaded', function(){
+
+    renderProducts();
+
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file-input');
+    dropzone.addEventListener('click', ()=>fileInput.click());
+    dropzone.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); fileInput.click(); } });
+    fileInput.addEventListener('change', e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); });
+    ['dragenter','dragover'].forEach(evt=>{
+      dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.add('drag'); });
+    });
+    ['dragleave','drop'].forEach(evt=>{
+      dropzone.addEventListener(evt, e=>{ e.preventDefault(); dropzone.classList.remove('drag'); });
+    });
+    dropzone.addEventListener('drop', e=>{
+      if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+    });
+
+    document.getElementById('btn-generate').addEventListener('click', runGeneration);
+
+    document.getElementById('inp-target').addEventListener('input', ()=>{ state.targetGHManual = true; });
+
+    document.getElementById('inp-level').addEventListener('change', syncLevelUI);
+    document.getElementById('inp-climb-mode').addEventListener('change', syncClimbModeVisibility);
+    document.getElementById('inp-wkg').addEventListener('input', syncClimbModeVisibility);
+    syncLevelUI();
+
+    // prodotti
+    const productsList = document.getElementById('products-list');
+    productsList.addEventListener('input', e=>{
+      const row = e.target.closest('.product-row'); if(!row) return;
+      const p = state.products.find(x=>x.id===row.dataset.id); if(!p) return;
+      if(e.target.dataset.field==='name') p.name = e.target.value;
+      if(e.target.dataset.field==='grams') p.grams = Math.max(0, parseFloat(e.target.value)||0);
+    });
+    productsList.addEventListener('change', e=>{
+      if(e.target.dataset.field!=='kind') return;
+      const row = e.target.closest('.product-row');
+      const p = state.products.find(x=>x.id===row.dataset.id); if(!p) return;
+      p.kind = e.target.value;
+    });
+    productsList.addEventListener('click', e=>{
+      if(e.target.dataset.action!=='del-product') return;
+      const row = e.target.closest('.product-row');
+      if(state.products.length<=1) return;
+      state.products = state.products.filter(x=>x.id!==row.dataset.id);
+      renderProducts();
+    });
+    document.getElementById('btn-add-product').addEventListener('click', ()=>{
+      if(state.products.length>=5) return;
+      readProducts();
+      state.products.push({ id:'p'+(state.productSeq++), name:'Nuovo prodotto', kind:'gel', grams:30 });
+      renderProducts();
+    });
+
+    const bottleCountSel = document.getElementById('inp-bottle-count');
+    const bottle2Box = document.getElementById('bottle2-box');
+    function syncBottle2Visibility(){
+      bottle2Box.classList.toggle('hidden', bottleCountSel.value!=='2');
+    }
+    bottleCountSel.addEventListener('change', syncBottle2Visibility);
+    syncBottle2Visibility();
+
+    const hideWaterChk = document.getElementById('inp-hide-water');
+    hideWaterChk.addEventListener('change', ()=>{
+      state.inputs.hideWater = hideWaterChk.checked;
+      if(!state.resampled) return;
+      renderTable(); renderChartOnly(); renderSummaryOnly(); renderAlternatives();
+    });
+
+    const extraRechargeChk = document.getElementById('inp-extra-recharge');
+    const extraRechargeBox = document.getElementById('extra-recharge-box');
+    function syncExtraRechargeVisibility(){
+      extraRechargeBox.classList.toggle('hidden', !extraRechargeChk.checked);
+    }
+    extraRechargeChk.addEventListener('change', syncExtraRechargeVisibility);
+    syncExtraRechargeVisibility();
+
+    document.getElementById('inp-ristoro-km').addEventListener('input', ()=>{
+      if(!state.totalKm) return;
+      const el = document.getElementById('inp-ristoro-km');
+      const v = parseFloat(el.value);
+      const hint = document.getElementById('ristoro-km-hint');
+      if(Number.isFinite(v) && v>0 && v<state.totalKm){
+        hint.textContent = 'km esatto — arrivo previsto alle '+formatTime(timeAtKm(state.resampled, v));
+      } else {
+        hint.textContent = 'km esatto del percorso (0–'+state.totalKm.toFixed(1)+')';
+      }
+    });
+
+    document.getElementById('btn-add-point').addEventListener('click', ()=>{
+      if(!state.resampled) return;
+      const km = state.events.length ? largestGapMidpointKm() : state.totalKm/2;
+      const base = state.products.find(p=>p.kind==='gel') || state.products[0];
+      const ev = {
+        id:'e'+Date.now()+Math.floor(Math.random()*1000),
+        km, type: base ? base.kind : 'gel', productId: base ? base.id : null,
+        grams: base ? base.grams : 25,
+        role:null, climbId:null, labelAuto:false, label:'Nuovo punto di integrazione'
+      };
+      state.events.push(ev);
+      state.events.sort((a,b)=>a.km-b.km);
+      renderTable(); renderChartOnly(); renderSummaryOnly(); renderAlternatives();
+    });
+
+    const tbody = document.getElementById('events-tbody');
+    tbody.addEventListener('input', e=>{
+      const tr = e.target.closest('tr'); if(!tr) return;
+      const ev = state.events.find(x=>x.id===tr.dataset.id); if(!ev) return;
+      const field = e.target.dataset.field;
+      if(field==='km'){
+        ev.km = clamp(parseFloat(e.target.value)||0, 0, state.totalKm);
+        tr.querySelector('.time-cell').textContent = formatTime(timeAtKm(state.resampled, ev.km));
+      } else if(field==='grams'){
+        ev.grams = Math.max(0, parseFloat(e.target.value)||0);
+      } else if(field==='label'){
+        ev.label = e.target.value; ev.labelAuto = false;
+      }
+      renderChartOnly(); renderSummaryOnly(); renderAlternatives();
+    });
+    tbody.addEventListener('change', e=>{
+      if(e.target.dataset.field!=='type') return;
+      const tr = e.target.closest('tr');
+      const ev = state.events.find(x=>x.id===tr.dataset.id); if(!ev) return;
+      const val = e.target.value;
+      if(val==='bottle'){
+        ev.type='bottle'; ev.productId=null;
+        ev.grams = state.inputs.bottle1Carbs;
+        ev.ml = state.inputs.bottle1Ml;
+      } else {
+        const p = productById(val.slice(2));
+        if(!p) return;
+        ev.type = p.kind; ev.productId = p.id; ev.grams = p.grams; delete ev.ml;
+      }
+      if(ev.labelAuto) ev.label = autoLabel(ev);
+      tr.querySelector('.cell-grams').value = ev.grams;
+      tr.querySelector('.cell-label').value = ev.label;
+      renderChartOnly(); renderSummaryOnly(); renderAlternatives();
+    });
+    tbody.addEventListener('click', e=>{
+      if(e.target.dataset.action==='delete'){
+        const tr = e.target.closest('tr');
+        state.events = state.events.filter(x=>x.id!==tr.dataset.id);
+        renderTable(); renderChartOnly(); renderSummaryOnly(); renderAlternatives();
+      }
+    });
+    tbody.addEventListener('blur', e=>{
+      if(e.target.dataset.field==='km'){
+        state.events.sort((a,b)=>a.km-b.km);
+        renderTable(); renderChartOnly();
+      }
+    }, true);
+
+    const climbsList = document.getElementById('climbs-list');
+    climbsList.addEventListener('input', e=>{
+      if(e.target.dataset.field==='name'){
+        const item = e.target.closest('.climb-item');
+        const climb = state.climbs.find(c=>c.id===item.dataset.id); if(!climb) return;
+        climb.name = e.target.value || climb.name;
+        state.events.filter(ev=>ev.climbId===climb.id && ev.labelAuto).forEach(ev=>{ ev.label = autoLabel(ev); });
+        renderTable(); renderChartOnly();
+      }
+    });
+
+    document.getElementById('chart-wrap').addEventListener('click', e=>{
+      const marker = e.target.closest('[data-event-id]');
+      if(!marker) return;
+      const row = document.getElementById('event-row-'+marker.getAttribute('data-event-id'));
+      if(row){
+        row.scrollIntoView({behavior:'smooth', block:'center'});
+        row.classList.add('row-highlight');
+        setTimeout(()=>row.classList.remove('row-highlight'), 1200);
+      }
+    });
+
+  });
+
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', ()=>{
+      navigator.serviceWorker.register('./sw.js').catch(()=>{
+        // in locale senza https il service worker non si registra: non blocca l'app
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>
